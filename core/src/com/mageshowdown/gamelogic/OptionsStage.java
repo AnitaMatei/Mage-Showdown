@@ -110,12 +110,14 @@ public class OptionsStage extends Stage {
         playMic = new TextButton("Play Recording", uiSkin);
 
         Stream.of(labels).forEach(label -> label.setAlignment(Align.center));
-        Stream.of(resSelectBox, modeSelectBox, refreshSelectBox).forEach(selectBox -> selectBox.setAlignment(Align.center));
+        Stream.of(resSelectBox, modeSelectBox, refreshSelectBox).forEach(selectBox -> {
+            selectBox.setAlignment(Align.center);
+            selectBox.getList().setAlignment(Align.center);
+        });
 
         backButton = new TextButton("Back", uiSkin);
         applyButton = new TextButton("Apply", uiSkin);
 
-        //(1280x720)->290w 60h cells 25pad right left 20 top bottom
         //Here we position the widgets in the context table
         contextTable.defaults().space(20, 25, 20, 25).width(350).height(60);
         contextTable.add(labels[0]).colspan(2);
@@ -130,7 +132,6 @@ public class OptionsStage extends Stage {
         contextTable.row();
         contextTable.add(vsyncCheckBox, showFPSCheckBox);
         contextTable.row();
-        //contextTable.defaults().space(20, 25, 20, 25).width(290).height(60);
         contextTable.add(labels[5], soundVolumeSlider);
         contextTable.row();
         contextTable.add(labels[6], musicVolumeSlider);

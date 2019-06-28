@@ -3,6 +3,7 @@ package com.mageshowdown.gamelogic;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -12,29 +13,26 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mageshowdown.gameclient.*;
 import com.mageshowdown.utils.PrefsKeys;
 
-import static com.mageshowdown.gameclient.ClientAssetLoader.prefs;
+import static com.mageshowdown.gameclient.ClientAssetLoader.*;
 
 public class GameScreen implements Screen {
-    enum GameState {
-        GAME_RUNNING, GAME_PAUSED, GAME_OPTIONS, SCOREBOARD
-    }
-
     private static final GameScreen INSTANCE = new GameScreen();
     private static Viewport viewport;
     private static Batch batch;
-
     private static ClientGameStage gameStage;
     private static GameHUDStage hudStage;
     private static OptionsStage gameOptionsStage;
     private static Stage escMenuStage;
     private static ScoreboardStage scoreboardStage;
     private static RoundEndStage roundEndStage;
-
     private static GameState gameState;
 
     public static void start() {
@@ -76,6 +74,121 @@ public class GameScreen implements Screen {
 
     public static void setGameState(GameState gameState) {
         GameScreen.gameState = gameState;
+    }
+
+    private static void prepareEscMenu() {
+        Image background = new Image(ClientAssetLoader.menuBackground);
+        background.setFillParent(true);
+        background.setColor(0, 0, 0, 0.8f);
+
+        Table root = new Table();
+        root.setFillParent(true);
+        //root.debug();
+
+        TextButton resumeButton = new TextButton("Resume Game", ClientAssetLoader.uiSkin);
+        TextButton optionsButton = new TextButton("Options...", ClientAssetLoader.uiSkin);
+        TextButton quitButton = new TextButton("Quit Game", ClientAssetLoader.uiSkin);
+        TextButton disconnectButton = new TextButton("Disconnect", ClientAssetLoader.uiSkin);
+
+        root.defaults().space(20, 25, 20, 25).width(605).height(60).colspan(2);
+        root.add(resumeButton);
+        root.row();
+        root.add(optionsButton);
+        root.row();
+        root.defaults().width(290).colspan(1);
+        root.add(disconnectButton, quitButton);
+
+        resumeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+
+                gameState = GameState.GAME_RUNNING;
+                Gdx.input.setInputProcessor(gameStage.getPlayerCharacter());
+            }
+        });
+
+        optionsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+
+                gameOptionsStage = new OptionsStage(viewport, batch, ClientAssetLoader.solidBlack);
+                gameState = GameState.GAME_OPTIONS;
+                Gdx.input.setInputProcessor(gameOptionsStage);
+            }
+        });
+
+        disconnectButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+
+                GameClient.getInstance().stop();
+                ClientRound.getInstance().stop();
+
+                MageShowdownClient.getInstance().setScreen(MenuScreen.getInstance());
+                Gdx.input.setInputProcessor(MenuScreen.getMainMenuStage());
+            }
+        });
+
+        quitButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+
+                final Dialog dialog = new Dialog("", ClientAssetLoader.uiSkin);
+                dialog.text("Are you sure?", ClientAssetLoader.uiSkin.get("menu-label", Label.LabelStyle.class));
+                Button confirmBtn = new TextButton("Yes, quit the Game!", ClientAssetLoader.uiSkin);
+                Button cancelBtn = new TextButton("No, take me back!", ClientAssetLoader.uiSkin);
+                confirmBtn.addListener(new ChangeListener() {
+                    @Override
+                    public void changed(ChangeEvent event, Actor actor) {
+                        ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                        Gdx.app.exit();
+                    }
+                });
+                cancelBtn.addListener(new ChangeListener() {
+                    @Override
+                    public void changed(ChangeEvent event, Actor actor) {
+                        ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                        dialog.hide();
+                    }
+                });
+                dialog.button(confirmBtn);
+                dialog.button(cancelBtn);
+                dialog.setMovable(false);
+                dialog.show(escMenuStage);
+            }
+        });
+
+        escMenuStage.addActor(background);
+        escMenuStage.addActor(root);
+    }
+
+    private void gameRunningInput() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && gameState == GameState.GAME_RUNNING) {
+            gameState = GameState.GAME_PAUSED;
+            Gdx.input.setInputProcessor(escMenuStage);
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.TAB) && gameState == GameState.GAME_RUNNING)
+            gameState = GameState.SCOREBOARD;
+    }
+
+    private void gamePausedInput() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && gameState == GameState.GAME_PAUSED) {
+            gameState = GameState.GAME_RUNNING;
+            Gdx.input.setInputProcessor(gameStage.getPlayerCharacter());
+        }
+    }
+
+    private void scoreboardInput() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.TAB) && gameState == GameState.SCOREBOARD)
+            gameState = GameState.GAME_RUNNING;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && gameState == GameState.SCOREBOARD) {
+            gameState = GameState.GAME_PAUSED;
+            Gdx.input.setInputProcessor(escMenuStage);
+        }
     }
 
     @Override
@@ -152,119 +265,199 @@ public class GameScreen implements Screen {
         batch.dispose();
     }
 
-    private void gameRunningInput() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && gameState == GameState.GAME_RUNNING) {
-            gameState = GameState.GAME_PAUSED;
-            Gdx.input.setInputProcessor(escMenuStage);
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.TAB) && gameState == GameState.GAME_RUNNING)
-            gameState = GameState.SCOREBOARD;
+    public enum GameState {
+        GAME_RUNNING, GAME_PAUSED, GAME_OPTIONS, SCOREBOARD
     }
 
-    private void gamePausedInput() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && gameState == GameState.GAME_PAUSED) {
-            gameState = GameState.GAME_RUNNING;
-            Gdx.input.setInputProcessor(gameStage.getPlayerCharacter());
+    private static class ScoreboardStage extends Stage {
+
+        private ClientGameStage gameStage = GameScreen.getGameStage();
+        private ClientRound round = ClientRound.getInstance();
+        private Label timeLeftLabel;
+        private PlayerStatsList psl;
+
+        private ScoreboardStage(Viewport viewport, Batch batch) {
+            super(viewport, batch);
+            init();
+        }
+
+        private void init() {
+            psl = new PlayerStatsList();
+            Table root = new Table(uiSkin);
+            root.setBackground("default-window");
+            root.setColor(0, 0, 0, 0.8f);
+            //root.debug();
+
+            Label.LabelStyle timeLeftStyle = new Label.LabelStyle(ClientAssetLoader.bigSizeFont, Color.WHITE);
+            timeLeftLabel = new Label("", timeLeftStyle);
+            root.top();
+            root.add(new Label("TIME LEFT", timeLeftStyle)).expandX().colspan(3);
+            root.row();
+            root.add(timeLeftLabel).expandX().colspan(3);
+            root.row();
+            root.defaults().pad(1, 1, 1, 1).center().fill();
+            root.add(new Label("Player Name", uiSkin));
+            root.add(new Label("Kills", uiSkin));
+            root.add(new Label("Score", uiSkin));
+            root.row();
+
+            root.add(psl.nameListWidget);
+            root.add(psl.killsListWidget);
+            root.add(psl.scoreListWidget);
+
+            Container<Table> wrapper = new Container<>(root);
+            wrapper.setFillParent(true);
+            int WIDTH = 800;
+            int HEIGHT = 400;
+            wrapper.width(WIDTH).height(HEIGHT);
+
+            this.addActor(wrapper);
+        }
+
+        @Override
+        public void act() {
+            super.act();
+
+            timeLeftLabel.setText((int) (Round.ROUND_LENGTH - round.timePassed));
+            psl.update();
+        }
+
+        private class PlayerStatsList {
+            Array<String> playerNames;
+            Array<Integer> playerKills;
+            Array<Integer> playerScore;
+            List<String> nameListWidget = new List<>(uiSkin);
+            List<Integer> killsListWidget = new List<>(uiSkin);
+            List<Integer> scoreListWidget = new List<>(uiSkin);
+
+            private PlayerStatsList() {
+                playerNames = new Array<>();
+                playerKills = new Array<>();
+                playerScore = new Array<>();
+            }
+
+            void update() {
+                playerNames.clear();
+                playerKills.clear();
+                playerScore.clear();
+                for (ClientPlayerCharacter player : gameStage.getSortedPlayers()) {
+                    playerNames.add(player.getUserName());
+                    playerKills.add(player.getKills());
+                    playerScore.add(player.getScore());
+                }
+                gameStage.getSortedPlayers().sort((o1, o2) -> Integer.compare(o2.getScore(), o1.getScore()));
+                nameListWidget.setItems(playerNames);
+                killsListWidget.setItems(playerKills);
+                scoreListWidget.setItems(playerScore);
+            }
         }
     }
 
-    private void scoreboardInput() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.TAB) && gameState == GameState.SCOREBOARD)
-            gameState = GameState.GAME_RUNNING;
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && gameState == GameState.SCOREBOARD) {
-            gameState = GameState.GAME_PAUSED;
-            Gdx.input.setInputProcessor(escMenuStage);
+    private static class GameHUDStage extends Stage {
+        private ProgressBar healthOrb;
+        private ProgressBar shieldBar;
+        private ProgressBar manaBar;
+        private Label healthText;
+        private Label shieldText;
+        private Label manaText;
+
+        private float maxCapacity;
+        private float currCapacity;
+
+        private ClientGameStage gameStage = GameScreen.getGameStage();
+
+        private GameHUDStage(Viewport viewport, Batch batch) {
+            super(viewport, batch);
+            init();
+        }
+
+        private void init() {
+            Table root = new Table();
+            root.setFillParent(true);
+            //root.debug();
+
+            Label.LabelStyle resourceTextStyle = new Label.LabelStyle(ClientAssetLoader.bigSizeFont, Color.WHITE);
+            TiledDrawable tiledDrawable = hudSkin.getTiledDrawable("health-orb-fill");
+            tiledDrawable.setMinHeight(0f);
+            hudSkin.get("health-orb", ProgressBar.ProgressBarStyle.class).knobBefore = tiledDrawable;
+            healthOrb = new ProgressBar(0f, PlayerCharacter.getMaxHealth(), 1f, true, hudSkin, "health-orb");
+            healthOrb.setAnimateDuration(0.1f);
+            healthText = new Label("", resourceTextStyle);
+            healthText.setAlignment(Align.center);
+            Stack healthStack = new Stack();
+            healthStack.add(healthOrb);
+            healthStack.add(healthText);
+
+            tiledDrawable = hudSkin.getTiledDrawable("progress-bar-mana-v");
+            tiledDrawable.setMinHeight(0f);
+            hudSkin.get("mana-vertical", ProgressBar.ProgressBarStyle.class).knobBefore = tiledDrawable;
+            shieldBar = new ProgressBar(0f, PlayerCharacter.getMaxShield(), 1f, true, hudSkin, "mana-vertical");
+            shieldBar.setAnimateDuration(0.1f);
+            shieldText = new Label("", resourceTextStyle);
+            shieldText.setAlignment(Align.center);
+            Stack shieldStack = new Stack();
+            shieldStack.add(shieldBar);
+            shieldStack.add(shieldText);
+
+            tiledDrawable = hudSkin.getTiledDrawable("progress-bar-mana");
+            tiledDrawable.setMinWidth(0f);
+            hudSkin.get("mana", ProgressBar.ProgressBarStyle.class).knobBefore = tiledDrawable;
+            manaBar = new ProgressBar(0, 25, 1f, false, hudSkin, "mana");
+            manaBar.setAnimateDuration(0.1f);
+            manaText = new Label("", resourceTextStyle);
+            manaText.setAlignment(Align.center);
+            Stack manaStack = new Stack();
+            manaStack.add(manaBar);
+            manaStack.add(manaText);
+
+            root.left().bottom();
+            root.add(healthStack).width(201).height(164).left();
+            root.add(shieldStack).height(175).padLeft(20).left().expandX();
+            root.add(manaStack).width(175);
+
+            this.addActor(root);
+        }
+
+        @Override
+        public void act() {
+            super.act();
+            if (gameStage.getPlayerCharacter() != null) {
+                healthOrb.setValue(gameStage.getPlayerCharacter().getHealth());
+                healthText.setText((int) gameStage.getPlayerCharacter().getHealth());
+
+                shieldBar.setValue(gameStage.getPlayerCharacter().getEnergyShield());
+                shieldText.setText((int) gameStage.getPlayerCharacter().getEnergyShield());
+
+                maxCapacity = gameStage.getPlayerCharacter().getCurrentOrb().getMaxCapacity();
+                currCapacity = gameStage.getPlayerCharacter().getCurrentOrb().getCurrentMana();
+                manaBar.setRange(0f, maxCapacity);
+                manaBar.setValue((int) currCapacity);
+                manaText.setText((int) currCapacity + "/" + (int) maxCapacity);
+            }
         }
     }
 
-    private static void prepareEscMenu() {
-        Image background = new Image(ClientAssetLoader.menuBackground);
-        background.setFillParent(true);
-        background.setColor(0, 0, 0, 0.8f);
+    private static class RoundEndStage extends Stage {
+        private Label roundEndLabel;
 
-        Table root = new Table();
-        root.setFillParent(true);
-        //root.debug();
+        private RoundEndStage(Viewport viewport, Batch batch) {
+            super(viewport, batch);
+            Image background = new Image(ClientAssetLoader.menuBackground);
+            background.setFillParent(true);
+            background.setColor(0, 0, 0, 0.8f);
 
-        TextButton resumeButton = new TextButton("Resume Game", ClientAssetLoader.uiSkin);
-        TextButton optionsButton = new TextButton("Options...", ClientAssetLoader.uiSkin);
-        TextButton quitButton = new TextButton("Quit Game", ClientAssetLoader.uiSkin);
-        TextButton disconnectButton = new TextButton("Disconnect", ClientAssetLoader.uiSkin);
+            roundEndLabel = new Label("", ClientAssetLoader.uiSkin.get("menu-label", Label.LabelStyle.class));
+            Container<Label> wrapper = new Container<>(roundEndLabel);
+            wrapper.setFillParent(true);
 
-        //(1280x720)->290w 60h cells 25pad right left 20 top bottom
-        root.defaults().space(20, 25, 20, 25).width(605).height(60).colspan(2);
-        root.add(resumeButton);
-        root.row();
-        root.add(optionsButton);
-        root.row();
-        root.defaults().width(290).colspan(1);
-        root.add(disconnectButton, quitButton);
+            this.addActor(background);
+            this.addActor(wrapper);
+        }
 
-        resumeButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-
-                gameState = GameState.GAME_RUNNING;
-                Gdx.input.setInputProcessor(gameStage.getPlayerCharacter());
-            }
-        });
-
-        optionsButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-
-                gameOptionsStage = new OptionsStage(viewport, batch, ClientAssetLoader.solidBlack);
-                gameState = GameState.GAME_OPTIONS;
-                Gdx.input.setInputProcessor(gameOptionsStage);
-            }
-        });
-
-        disconnectButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-
-                GameClient.getInstance().stop();
-                ClientRound.getInstance().stop();
-
-                MageShowdownClient.getInstance().setScreen(MenuScreen.getInstance());
-                Gdx.input.setInputProcessor(MenuScreen.getMainMenuStage());
-            }
-        });
-
-        quitButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-
-                final Dialog dialog = new Dialog("", ClientAssetLoader.uiSkin);
-                dialog.text("Are you sure?", ClientAssetLoader.uiSkin.get("menu-label", Label.LabelStyle.class));
-                Button confirmBtn = new TextButton("Yes, quit the Game!", ClientAssetLoader.uiSkin);
-                Button cancelBtn = new TextButton("No, take me back!", ClientAssetLoader.uiSkin);
-                confirmBtn.addListener(new ChangeListener() {
-                    @Override
-                    public void changed(ChangeEvent event, Actor actor) {
-                        ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                        Gdx.app.exit();
-                    }
-                });
-                cancelBtn.addListener(new ChangeListener() {
-                    @Override
-                    public void changed(ChangeEvent event, Actor actor) {
-                        ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                        dialog.hide();
-                    }
-                });
-                dialog.button(confirmBtn);
-                dialog.button(cancelBtn);
-                dialog.setMovable(false);
-                dialog.show(escMenuStage);
-            }
-        });
-
-        escMenuStage.addActor(background);
-        escMenuStage.addActor(root);
+        @Override
+        public void act() {
+            super.act();
+            roundEndLabel.setText("NEW ROUND STARTS IN: " + (int) ClientRound.getInstance().getTimePassedRoundFinished());
+        }
     }
 }

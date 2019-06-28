@@ -132,7 +132,6 @@ public class MenuScreen implements Screen {
         TextButton quitButton = new TextButton("Quit Game", ClientAssetLoader.uiSkin);
         final TextField addressField = new TextField(prefs.getString(PrefsKeys.LASTENTEREDIP), ClientAssetLoader.uiSkin);
 
-        //(1280x720)->290w 60h cells 25pad right left 20 top bottom
         root.defaults().space(20, 25, 20, 25).width(290).height(60);
         root.add(connectButton);
         root.add(addressField);
