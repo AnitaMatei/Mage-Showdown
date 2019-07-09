@@ -6,7 +6,6 @@ import com.badlogic.gdx.audio.AudioDevice;
 import com.badlogic.gdx.audio.AudioRecorder;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -320,6 +319,8 @@ public class OptionsStage extends Stage {
                 }
                 if (MageShowdownClient.getInstance().getScreen().equals(GameScreen.getInstance())) {
                     GameScreen.setGameState(GameScreen.GameState.GAME_PAUSED);
+                    GameScreen.getRootTable().getColor().a = 0f;
+                    GameScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
                     Gdx.input.setInputProcessor(GameScreen.getEscMenuStage());
                 }
                 stageDispose();

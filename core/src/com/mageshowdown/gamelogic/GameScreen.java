@@ -33,7 +33,12 @@ public class GameScreen implements Screen {
     private static Stage escMenuStage;
     private static ScoreboardStage scoreboardStage;
     private static RoundEndStage roundEndStage;
+    private static Table root;
     private static GameState gameState;
+
+    private GameScreen() {
+
+    }
 
     public static void start() {
         viewport = new FitViewport(1920, 1080);
@@ -76,12 +81,16 @@ public class GameScreen implements Screen {
         GameScreen.gameState = gameState;
     }
 
+    public static Table getRootTable() {
+        return root;
+    }
+
     private static void prepareEscMenu() {
         Image background = new Image(ClientAssetLoader.menuBackground);
         background.setFillParent(true);
         background.setColor(0, 0, 0, 0.8f);
 
-        Table root = new Table();
+        root = new Table();
         root.setFillParent(true);
         //root.debug();
 
@@ -114,7 +123,9 @@ public class GameScreen implements Screen {
                 ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
 
                 gameOptionsStage = new OptionsStage(viewport, batch, ClientAssetLoader.solidBlack);
+                gameOptionsStage.getRootTable().getColor().a = 0f;
                 gameState = GameState.GAME_OPTIONS;
+                gameOptionsStage.getRootTable().addAction(Actions.fadeIn(0.1f));
                 Gdx.input.setInputProcessor(gameOptionsStage);
             }
         });
@@ -168,7 +179,9 @@ public class GameScreen implements Screen {
 
     private void gameRunningInput() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && gameState == GameState.GAME_RUNNING) {
+            root.getColor().a = 0;
             gameState = GameState.GAME_PAUSED;
+            root.addAction(Actions.fadeIn(0.1f));
             Gdx.input.setInputProcessor(escMenuStage);
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.TAB) && gameState == GameState.GAME_RUNNING) {
@@ -431,7 +444,6 @@ public class GameScreen implements Screen {
 
             this.addActor(background);
             this.addActor(wrapper);
-            this.getRoot().getColor().a = 0f;
         }
 
         @Override

@@ -158,8 +158,8 @@ public class MenuScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
                 menuOptionsStage = new OptionsStage(viewport, batch, ClientAssetLoader.menuBackground);
-                stagePhase = StagePhase.OPTIONS_STAGE;
                 menuOptionsStage.getRootTable().getColor().a = 0f;
+                stagePhase = StagePhase.OPTIONS_STAGE;
                 menuOptionsStage.getRootTable().addAction(Actions.fadeIn(0.1f));
                 Gdx.input.setInputProcessor(menuOptionsStage);
             }
