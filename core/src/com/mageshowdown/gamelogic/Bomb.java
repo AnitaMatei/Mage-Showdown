@@ -18,7 +18,7 @@ public class Bomb extends Spell implements AnimatedActor {
     private boolean exploded = false;
 
     public Bomb(Stage stage, Vector2 position, float rotation, int id, int ownerId, Orb.SpellType spellType, boolean isClient) {
-        super(stage, new Vector2(0, 0), position, new Vector2(190, 190), new Vector2(.8f, .8f), new Vector2(140, 140), rotation, id, ownerId, 9, isClient);
+        super(stage, position, new Vector2(190, 190), new Vector2(.8f, .8f), new Vector2(140, 140), rotation, id, ownerId, 9, isClient);
 
         this.spellType = spellType;
         switch (spellType) {
@@ -65,7 +65,11 @@ public class Bomb extends Spell implements AnimatedActor {
             * this way the body doesnt end up in a slightly different place from where the bomb was cast
             */
             setPosition(getX()+25,getY()+25);
-            createBody(new Vector2(bodySize.x/2, bodySize.y/2), BodyDef.BodyType.StaticBody);
+            createBody(new Vector2(bodySize.x/2, bodySize.y/2), BodyDef.BodyType.StaticBody,
+                    ()->{
+                makeBodySensor();
+                return null;
+                    });
         }
     }
 

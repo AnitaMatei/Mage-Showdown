@@ -11,14 +11,14 @@ public class CreateBodies {
         BodyDef bd = new BodyDef();
         bd.type = bodyType;
         bd.angle = rotation * (float) Math.PI / 180;
-        //box2d takes the coordinates of the world, so we have to scale the pixels
+        //box2d takes the coordinates of the WORLD, so we have to scale the pixels
         Vector2 convPosition = GameWorld.convertPixelsToWorld(position);
         Vector2 convSize = GameWorld.convertPixelsToWorld(size);
         Vector2 convOrigin = GameWorld.convertPixelsToWorld(origin);
         //since we use vertices to create our polygon the origin of the body is the lower left corner
         bd.position.set(new Vector2(convPosition.x + convOrigin.x, convPosition.y + convOrigin.y));
 
-        body = GameWorld.world.createBody(bd);
+        body = GameWorld.WORLD.createBody(bd);
         Shape shape = createPolygonShape(convSize, convOrigin);
         body.createFixture(createFixtureDef(shape, density, friction, restitution));
         shape.dispose();
@@ -26,7 +26,7 @@ public class CreateBodies {
         return body;
     }
 
-    private static PolygonShape createPolygonShape(Vector2 convSize, Vector2 convOrigin) {
+    public static PolygonShape createPolygonShape(Vector2 convSize, Vector2 convOrigin) {
         PolygonShape ps = new PolygonShape();
         //in order to be able to change the origin of the body without headaches we use vertices instead of setAsBox()
         Vector2[] vertices = new Vector2[]{new Vector2(-convOrigin.x, -convOrigin.y),
@@ -40,7 +40,7 @@ public class CreateBodies {
         return ps;
     }
 
-    private static FixtureDef createFixtureDef(Shape shape, float density, float friction, float restitution) {
+    public static FixtureDef createFixtureDef(Shape shape, float density, float friction, float restitution) {
         FixtureDef fd = new FixtureDef();
         fd.shape = shape;
         fd.density = density;

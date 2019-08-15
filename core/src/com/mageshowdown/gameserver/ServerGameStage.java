@@ -26,7 +26,7 @@ public class ServerGameStage extends Stage {
         playerCharacters = new HashMap<Integer, ServerPlayerCharacter>();
 
 
-        GameWorld.world.setContactListener(new ServerCollisionManager(this));
+        GameWorld.WORLD.setContactListener(new ServerCollisionManager(this));
         addActor(ServerRound.getInstance());
     }
 
@@ -38,7 +38,7 @@ public class ServerGameStage extends Stage {
     public void act() {
         super.act();
         getInput();
-        GameWorld.world.step(Gdx.graphics.getDeltaTime(), 6, 2);
+        GameWorld.stepBox2DWorld();
 
         GameWorld.clearBodyCreationQueue();
         GameWorld.clearBodyRemovalQueue();

@@ -11,21 +11,22 @@ public abstract class Spell extends DynamicGameActor {
     protected boolean destroyable=false;
     protected boolean outOfBounds = false;
     protected boolean expired = false;
+    //the id of the spell cast itself
     protected int id;
+    //the id of the client that cast the spell
     protected int ownerId;
 
-    protected Spell(Stage stage, Vector2 velocity, Vector2 position, Vector2 size, Vector2 sizeScaling, Vector2 bodySize, float rotation, int id, int ownerId, float damageValue, boolean isClient) {
+    protected Spell(Stage stage, Vector2 position, Vector2 size, Vector2 sizeScaling, Vector2 bodySize, float rotation, int id, int ownerId, float damageValue, boolean isClient) {
         super(stage, position, size, bodySize, rotation, sizeScaling, isClient);
 
         this.DAMAGE_VALUE = damageValue;
         this.id = id;
         this.ownerId = ownerId;
 
-        this.velocity = velocity;
         stage.addActor(this);
     }
 
-    //if two projectiles have the same position then we know its the same projectile
+    //if two projectiles have the same position then we can fairly safely assume its the same projectile
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Spell) {
@@ -37,9 +38,6 @@ public abstract class Spell extends DynamicGameActor {
     @Override
     public void act(float delta) {
         super.act(delta);
-
-        if(body!=null && !body.getFixtureList().get(0).isSensor())
-            makeBodySensor();
 
         if (getRotation() > 80f) {
             if (sprite != null)
@@ -56,7 +54,7 @@ public abstract class Spell extends DynamicGameActor {
                     currFrame.flip(false, false);
         }
 
-        //every frame we check if the projectile is out of bounds
+        //every frame we check if the projectile is out of the bounds of the world
         if (body != null) {
             Vector2 convPosition = GameWorld.convertWorldToPixels(body.getPosition());
             if (convPosition.x > 1280 || convPosition.x < 0 || convPosition.y > 720 || convPosition.y < 0) {

@@ -22,12 +22,11 @@ public class ServerListener extends Listener {
     @Override
     public void connected(Connection connection) {
         Gdx.app.log("connection_event", connection.getID() + " connected!");
-        Network.LoginRequest packet=new Network.LoginRequest();
-        if(ServerRound.getInstance().isFinished())
-        {
-            packet.isRoundOver=true;
-            packet.roundTimer=ServerRound.getInstance().getTimePassedRoundFinished();
-        }else packet.roundTimer=ServerRound.getInstance().getTimePassed();
+        Network.LoginRequest packet = new Network.LoginRequest();
+        if (ServerRound.getInstance().isFinished()) {
+            packet.isRoundOver = true;
+            packet.roundTimer = ServerRound.getInstance().getTimePassedRoundFinished();
+        } else packet.roundTimer = ServerRound.getInstance().getTimePassed();
         myServer.sendToTCP(connection.getID(), packet);
     }
 
@@ -35,6 +34,7 @@ public class ServerListener extends Listener {
     public void received(Connection connection, Object object) {
         handleLoginRequest(connection, object);
         handleMoveKeyDown(connection, object);
+        handleMoveKeyUp(connection,object);
         handleCastSpellProjectile(connection, object);
         handleSwitchOrbs(connection, object);
         handleCastBomb(connection, object);
@@ -86,7 +86,7 @@ public class ServerListener extends Listener {
              */
             for (Connection con : myServer.getConnections()) {
                 if (con.getID() != connection.getID()) {
-                    if(gameStage.getPlayerById(con.getID())==null)
+                    if (gameStage.getPlayerById(con.getID()) == null)
                         continue;
                     toBeSent.userName = myServer.getUserNameById(con.getID());
                     toBeSent.id = con.getID();
@@ -96,15 +96,25 @@ public class ServerListener extends Listener {
                     myServer.sendToTCP(connection.getID(), toBeSent);
                 }
             }
+            SendBodyStates.sendNow();
         }
     }
 
     private void handleMoveKeyDown(Connection connection, Object object) {
         if (object instanceof Network.MoveKeyDown) {
             Network.MoveKeyDown packet = (Network.MoveKeyDown) object;
-            myServer.setUpdatePositions(true);
+            packet.playerId=connection.getID();
+            gameStage.getPlayerById(packet.playerId).startMoving(packet.keycode);
+            myServer.sendToAllExceptTCP(packet.playerId,packet);
+        }
+    }
 
-            gameStage.getPlayerById(connection.getID()).setMoveDirection(packet.keycode);
+    private void handleMoveKeyUp(Connection connection, Object object) {
+        if (object instanceof Network.MoveKeyUp) {
+            Network.MoveKeyUp packet = (Network.MoveKeyUp) object;
+            packet.playerId=connection.getID();
+            gameStage.getPlayerById(packet.playerId).stopMoving(packet.keycode);
+            myServer.sendToAllExceptTCP(packet.playerId,packet);
         }
     }
 

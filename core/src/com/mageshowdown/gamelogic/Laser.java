@@ -50,9 +50,14 @@ public class Laser extends Spell implements AnimatedActor {
     private static final float DURATION = .25f;
 
     public Laser(Stage stage, Vector2 position, float rotation, int id, int ownerId, boolean isClient) {
-        super(stage, new Vector2(0.001f, 0.001f), position, new Vector2(220, 31), new Vector2(1.5f, 1.2f), new Vector2(325, 15), rotation, id, ownerId, 2, isClient);
+        super(stage, position, new Vector2(220, 31), new Vector2(1.5f, 1.2f), new Vector2(325, 15), rotation, id, ownerId, 2, isClient);
         setOrigin(0, getOriginY());
-        createBody(rotation, new Vector2(0, bodySize.y / 2), BodyDef.BodyType.DynamicBody);
+        createBody(rotation, new Vector2(0, bodySize.y / 2), BodyDef.BodyType.DynamicBody,
+                ()->{
+            makeBodySensor();
+            body.setAwake(true);
+            return null;
+                });
 
         if (CLIENT_ACTOR)
             addAnimation(1, 7, .25f, "idle", ClientAssetLoader.fireLaserSpritesheet);

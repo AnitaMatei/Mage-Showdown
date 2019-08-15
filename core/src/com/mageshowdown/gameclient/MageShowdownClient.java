@@ -19,7 +19,7 @@ public class MageShowdownClient extends Game {
     private boolean canDrawFont = false;
 
     private MageShowdownClient() {
-        GameWorld.world.setContactListener(new ClientCollisionManager());
+        GameWorld.WORLD.setContactListener(new ClientCollisionManager());
     }
 
     public static MageShowdownClient getInstance() {

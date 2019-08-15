@@ -11,6 +11,17 @@ import com.mageshowdown.packets.Network;
 
 public class ClientListener extends Listener {
 
+    final static float OWN_VELOCITY_UPDATE_TIME = 2f;
+    static float ownVelocityUpdateTimer = 0f;
+    static boolean updateOwnVelocity = false;
+
+    public static void updateTimer() {
+        if (ownVelocityUpdateTimer >= OWN_VELOCITY_UPDATE_TIME) {
+            updateOwnVelocity = true;
+            ownVelocityUpdateTimer = 0f;
+        } else ownVelocityUpdateTimer += Gdx.graphics.getDeltaTime();
+    }
+
     private GameClient myClient = GameClient.getInstance();
 
     @Override
@@ -21,13 +32,22 @@ public class ClientListener extends Listener {
     public void received(Connection connection, Object object) {
         handleLoginServerRequest(connection, object);
         handleNewPlayerSpawned(connection, object);
-        handleUpdateCharacterStates(connection, object);
+        handleSendBodyStates(connection, object);
+        handleSendCharacterStates(connection, object);
         handleShootProjectile(connection, object);
         handlePlayerDisconnected(connection, object);
         handleCurrentMap(connection, object);
         handlePlayerDead(connection, object);
         handleSwitchOrbs(connection, object);
         handlePlantBomb(connection, object);
+        handleMoveKeyUp(connection, object);
+        handleMoveKeyDown(connection, object);
+    }
+
+    @Override
+    public void disconnected(Connection connection) {
+        super.disconnected(connection);
+        System.out.println("got blasted in the ass");
     }
 
     private void handleLoginServerRequest(Connection connection, Object object) {
@@ -35,11 +55,10 @@ public class ClientListener extends Listener {
             Network.LoginRequest packet = ((Network.LoginRequest) object);
 
             //we want to be sure the round timers are synchronized when the game starts
-            if(packet.isRoundOver)
-            {
+            if (packet.isRoundOver) {
                 ClientRound.getInstance().stop();
                 ClientRound.getInstance().setTimePassedRoundFinished(packet.roundTimer);
-            }else{
+            } else {
                 ClientRound.getInstance().start();
                 ClientRound.getInstance().setTimePassed(packet.roundTimer);
             }
@@ -51,29 +70,34 @@ public class ClientListener extends Listener {
         }
     }
 
-    private void handleUpdateCharacterStates(Connection connection, Object object) {
+    private void handleSendBodyStates(Connection connection, Object object) {
+        if (object instanceof Network.BodyStates) {
+            Network.BodyStates packet = ((Network.BodyStates) object);
+            /*
+             * In order to make sure the box2d WORLD doesnt get locked when we synchronize the
+             * position of a body, we have to queue these assignments
+             * and do them after the WORLD has stepped;
+             */
+            for (Network.OneBodyState bodyState : packet.states) {
+                ClientPlayerCharacter playerCharacter = getPlayerCharacterById(connection.getID(), bodyState.id);
+                if (playerCharacter != null) {
+                    playerCharacter.setQueuedPos(bodyState.pos);
+                }
+            }
+        }
+    }
+
+    private void handleSendCharacterStates(Connection connection, Object object) {
         if (object instanceof Network.CharacterStates) {
             Network.CharacterStates packet = ((Network.CharacterStates) object);
-            /*
-             * In order to make sure the box2d world doesnt get locked when we synchronize the
-             * velocity and position of a body, we have to queue these assignments
-             * and do them after the world has stepped;
-             */
-            for (Network.OneCharacterState characterState : packet.playerStates) {
-                ClientPlayerCharacter playerCharacter;
-                //if the character is mine i update my position
-                if (characterState.id == connection.getID()) {
-                    playerCharacter = GameScreen.getGameStage().getPlayerCharacter();
-                } else {
-                    playerCharacter = GameScreen.getGameStage().getOtherPlayers().get(characterState.id);
-                }
+            for (Network.OneCharacterState characterState : packet.states) {
+                ClientPlayerCharacter playerCharacter = getPlayerCharacterById(connection.getID(), characterState.id);
+
                 if (playerCharacter != null) {
                     //if the player wasnt frozen before and now is means they just became that way
                     if (!playerCharacter.isFrozen() && characterState.frozen)
                         playerCharacter.hasJustFrozen();
 
-                    playerCharacter.setQueuedPos(characterState.pos);
-                    playerCharacter.setQueuedVel(characterState.linVel);
                     playerCharacter.setHealth(characterState.health);
                     playerCharacter.setEnergyShield(characterState.energyShield);
                     playerCharacter.setScore(characterState.score);
@@ -88,7 +112,7 @@ public class ClientListener extends Listener {
     private void handleNewPlayerSpawned(Connection connection, Object object) {
         if (object instanceof Network.NewPlayerSpawned) {
             Network.NewPlayerSpawned packet = (Network.NewPlayerSpawned) object;
-            //the position generated by the spawn function is for box2d world coordinates so it needs to be converted
+            //the position generated by the spawn function is for box2d WORLD coordinates so it needs to be converted
             packet.pos = GameWorld.convertWorldToPixels(packet.pos);
             ClientRound.getInstance().setTimePassed(packet.roundTimePassed);
             if (connection.getID() == packet.id) {
@@ -165,6 +189,33 @@ public class ClientListener extends Listener {
 
             GameScreen.getGameStage().getOtherPlayers().get(packet.id).switchMyOrbs();
         }
+    }
+
+    private void handleMoveKeyDown(Connection connection, Object object) {
+        if (object instanceof Network.MoveKeyDown) {
+            Network.MoveKeyDown packet = (Network.MoveKeyDown) object;
+
+            GameScreen.getGameStage().getOtherPlayers().get(packet.playerId).startMoving(packet.keycode);
+        }
+    }
+
+    private void handleMoveKeyUp(Connection connection, Object object) {
+        if (object instanceof Network.MoveKeyUp) {
+            Network.MoveKeyUp packet = (Network.MoveKeyUp) object;
+
+            GameScreen.getGameStage().getOtherPlayers().get(packet.playerId).stopMoving(packet.keycode);
+        }
+    }
+
+    private ClientPlayerCharacter getPlayerCharacterById(int connectionId, int packetId) {
+        ClientPlayerCharacter playerCharacter;
+        if (packetId == connectionId) {
+            playerCharacter = GameScreen.getGameStage().getPlayerCharacter();
+        } else {
+            playerCharacter = GameScreen.getGameStage().getOtherPlayers().get(packetId);
+        }
+
+        return playerCharacter;
     }
 }
 

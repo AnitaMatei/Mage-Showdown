@@ -37,42 +37,32 @@ public abstract class DynamicGameActor extends GameActor {
         }
     }
 
-    protected Vector2 velocity;
-    protected VerticalState verticalState=VerticalState.FLYING;
-    protected HorizontalState horizontalState=HorizontalState.STANDING;
+    protected VerticalState verticalState = VerticalState.FLYING;
+    protected HorizontalState horizontalState = HorizontalState.STANDING;
 
-    /*
-     * because the dynamic game actor also has velocity we'll want to change, we also queue that up
-     */
-    protected Vector2 queuedVel;
-    protected boolean canClearVel = false;
 
     protected DynamicGameActor(Stage stage, Vector2 position, Vector2 size, Vector2 bodySize, float rotation, Vector2 sizeScaling, boolean isClient) {
         super(stage, position, size, bodySize, rotation, sizeScaling, isClient);
-        velocity = new Vector2(0, 0);
     }
 
     @Override
     public void act(float delta) {
-        updateGameActor(delta);
-
-        if (body != null && !GameWorld.world.isLocked()) {
-            body.setLinearVelocity(new Vector2(velocity.x, velocity.y));
-        }
+        super.act(delta);
+        calculateStates();
     }
 
-    @Override
-    public void clearQueue() {
-        super.clearQueue();
-        if (canClearVel) {
-            body.setLinearVelocity(queuedVel);
-            canClearVel = false;
-        }
-    }
+    protected void calculateStates(){
+        if(body==null || verticalState==null || horizontalState==null)
+            return;
+        if(body.getLinearVelocity().x>0)
+            horizontalState=HorizontalState.GOING_RIGHT;
+        else if (body.getLinearVelocity().x<0)
+            horizontalState=HorizontalState.GOING_LEFT;
+        else horizontalState=HorizontalState.STANDING;
 
-    public void setQueuedVel(Vector2 queuedVel) {
-        this.queuedVel = queuedVel;
-        canClearVel = true;
+        if(body.getLinearVelocity().y>.0001 && body.getLinearVelocity().y<-.0001)
+            verticalState=VerticalState.FLYING;
+        else verticalState=VerticalState.GROUNDED;
     }
 
     public void setHorizontalState(HorizontalState horizontalState) {
@@ -89,10 +79,6 @@ public abstract class DynamicGameActor extends GameActor {
 
     public VerticalState getVerticalState() {
         return verticalState;
-    }
-
-    public void setVelocity(Vector2 velocity) {
-        this.velocity = velocity;
     }
 
     public void updateGameActor(float delta) {

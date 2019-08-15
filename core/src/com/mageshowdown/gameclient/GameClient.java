@@ -25,12 +25,14 @@ public class GameClient extends Client {
         Kryo kryo = getKryo();
         kryo.register(Network.OneCharacterState.class);
         kryo.register(Network.CharacterStates.class);
+        kryo.register(Network.OneBodyState.class);
+        kryo.register(Network.BodyStates.class);
         kryo.register(Network.PlayerConnected.class);
         kryo.register(Vector2.class);
         kryo.register(Network.UpdatePositions.class);
         kryo.register(ArrayList.class);
         kryo.register(Network.MoveKeyDown.class);
-        kryo.register(Network.KeyUp.class);
+        kryo.register(Network.MoveKeyUp.class);
         kryo.register(Network.CastSpellProjectile.class);
         kryo.register(Network.CastBomb.class);
         kryo.register(Network.LoginRequest.class);

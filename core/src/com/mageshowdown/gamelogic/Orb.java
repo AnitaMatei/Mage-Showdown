@@ -36,7 +36,7 @@ public class Orb extends GameActor implements AnimatedActor {
     private boolean recharge = false;
 
     static {
-        spellCosts = new HashMap<String, Float>();
+        spellCosts = new HashMap<>();
         spellCosts.put("freeze projectile", 4f);
         spellCosts.put("laser", 3f);
         spellCosts.put("freeze bomb", 8f);

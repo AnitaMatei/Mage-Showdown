@@ -36,10 +36,11 @@ public class ClientGameStage extends Stage {
     @Override
     public void act() {
         super.act();
-        GameWorld.world.step(Gdx.graphics.getDeltaTime(), 6, 2);
+        ClientListener.updateTimer();
+        GameWorld.stepBox2DWorld();
         /*
-         * anything that affects the bodies inside a world has to be done after a world has stepped
-         * otherwise the game will crash because the world is locked; here the positions and velocities of players' bodies are synchronized
+         * anything that affects the bodies inside a WORLD has to be done after a WORLD has stepped
+         * otherwise the game will crash because the WORLD is locked; here the positions and velocities of players' bodies are synchronized
          * and the bodies that have to be removed are removed
          */
         GameWorld.clearBodyCreationQueue();
@@ -54,7 +55,7 @@ public class ClientGameStage extends Stage {
     @Override
     public void draw() {
         gameLevel.render();
-        //b2dr.render(GameWorld.world, getViewport().getCamera().combined.cpy().scale(100, 100, 1));
+        //b2dr.render(GameWorld.WORLD, getViewport().getCamera().combined.cpy().scale(100, 100, 1));
         super.draw();
     }
 
@@ -114,13 +115,13 @@ public class ClientGameStage extends Stage {
             removePlayerCharacter(key);
         }
 
-        //clear any leftover body in the box2d world
+        //clear any leftover body in the box2d WORLD
         Array<Body> bodies = new Array<Body>();
-        GameWorld.world.getBodies(bodies);
+        GameWorld.WORLD.getBodies(bodies);
         for (Body body : bodies)
             GameWorld.addToBodyRemovalQueue(body);
 
-        while (GameWorld.world.getBodyCount() > 0) {
+        while (GameWorld.WORLD.getBodyCount() > 0) {
             GameWorld.clearBodyRemovalQueue();
         }
     }

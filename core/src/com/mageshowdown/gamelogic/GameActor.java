@@ -26,7 +26,7 @@ public abstract class GameActor extends Actor {
 
     /*
      * declaring the variable where im holding the position of the actor
-     * after the world steps, we update its body with these values
+     * after the WORLD steps, we update its body with these values
      */
     protected Vector2 queuedPos;
     protected boolean canClearPos = false;
@@ -112,8 +112,7 @@ public abstract class GameActor extends Actor {
 
     protected void createBody(float density, float friction, float restitution, float rotation, Vector2 origin, BodyDef.BodyType bodyType) {
 
-        body = CreateBodies.createRectangleBody(new Vector2(getX(), getY()), bodySize, origin, bodyType, density, friction, restitution, rotation)
-        ;
+        body = CreateBodies.createRectangleBody(new Vector2(getX(), getY()), bodySize, origin, bodyType, density, friction, restitution, rotation);
         setTouchable(Touchable.enabled);
 
         //we set the body's user data to the current object in order to retrieve it later for collision handling
@@ -132,23 +131,23 @@ public abstract class GameActor extends Actor {
         canClearPos = true;
     }
 
-    protected void createBody(float rotation, Vector2 origin, BodyDef.BodyType bodyType) {
+    protected void createBody(float rotation, Vector2 origin, BodyDef.BodyType bodyType, Callable<Void> bodySettings) {
         final float localRotation = rotation;
         final BodyDef.BodyType localBodyType = bodyType;
         final Vector2 localOrigin = origin;
         GameWorld.addToBodyCreationQueue(() -> {
             createBody(.6f, 0f, 0f, localRotation, localOrigin, localBodyType);
             return null;
-        });
+        },bodySettings);
     }
 
-    protected void createBody(Vector2 origin, BodyDef.BodyType bodyType) {
+    protected void createBody(Vector2 origin, BodyDef.BodyType bodyType, Callable<Void> bodySettings) {
         final BodyDef.BodyType localBodyType = bodyType;
         final Vector2 localOrigin = origin;
         GameWorld.addToBodyCreationQueue(() -> {
             createBody(.6f, 0f, 0f, 0, localOrigin, localBodyType);
             return null;
-        });
+        },bodySettings);
     }
 
     public Body getBody() {

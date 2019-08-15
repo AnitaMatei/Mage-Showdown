@@ -11,8 +11,6 @@ public class Network {
     public static final int UDP_PORT=1333;
 
     public static class OneCharacterState{
-        public Vector2 pos;
-        public Vector2 linVel;
         public int id;
         public float health;
         public float energyShield;
@@ -23,7 +21,17 @@ public class Network {
     }
 
     public static class CharacterStates {
-        public ArrayList<OneCharacterState> playerStates;
+        public ArrayList<OneCharacterState> states;
+    }
+
+    public static class OneBodyState {
+        public Vector2 pos;
+        public Vector2 linVel;
+        public int id;
+    }
+
+    public static class BodyStates {
+        public ArrayList<OneBodyState> states;
     }
 
     public static class PlayerConnected {
@@ -35,10 +43,14 @@ public class Network {
     }
 
     public static class MoveKeyDown {
+        //the id of the player who pressed the key
+        public int playerId;
         public int keycode;
     }
 
-    public static class KeyUp{
+    public static class MoveKeyUp{
+        //the id of the player who released the key
+        public int playerId;
         public int keycode;
     }
 

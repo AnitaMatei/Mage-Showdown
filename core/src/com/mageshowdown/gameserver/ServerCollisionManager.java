@@ -4,6 +4,8 @@ import com.badlogic.gdx.physics.box2d.Contact;
 import com.mageshowdown.gamelogic.*;
 import com.mageshowdown.packets.Network;
 
+import javax.print.attribute.standard.Severity;
+
 public class ServerCollisionManager extends CollisionManager {
     private ServerGameStage gameStage;
 
@@ -24,6 +26,7 @@ public class ServerCollisionManager extends CollisionManager {
         } else if (obj1 instanceof ServerPlayerCharacter && obj2 instanceof Spell) {
             handlePlayerSpellCollision((Spell) obj2, (ServerPlayerCharacter) obj1);
         }
+
     }
 
 
@@ -38,7 +41,7 @@ public class ServerCollisionManager extends CollisionManager {
             //if the player died from the hit
             if (player.getHealth() < 0) {
                 //the player might have disconnected by the time the spell hit something
-                if(gameStage.getPlayerById(spell.getOwnerId())!=null)
+                if (gameStage.getPlayerById(spell.getOwnerId()) != null)
                     gameStage.getPlayerById(spell.getOwnerId()).addKill();
                 packet.id = player.getId();
                 packet.respawnPos = GameServer.getInstance().generateSpawnPoint(packet.id);

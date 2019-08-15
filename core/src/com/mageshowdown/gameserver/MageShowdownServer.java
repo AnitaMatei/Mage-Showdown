@@ -2,7 +2,6 @@ package com.mageshowdown.gameserver;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.mageshowdown.gameclient.ClientAssetLoader;
 import com.mageshowdown.gamelogic.GameWorld;
 import com.mageshowdown.packets.Network;
 
@@ -22,6 +21,8 @@ public class MageShowdownServer extends Game {
         serverStart();
         ServerAssetLoader.load();
         gameStage.start();
+        SendBodyStates.setGameStage(gameStage);
+        SendCharacterStates.setGameStage(gameStage);
     }
 
     @Override
@@ -34,19 +35,10 @@ public class MageShowdownServer extends Game {
         else ServerRound.getInstance().act(Gdx.graphics.getDeltaTime());
 
 
+
         if (myServer.getConnections().length > 0 && !ServerRound.getInstance().isFinished()) {
-            if (myServer.getUpdatePositions()) {
-                new UpdatePlayerPositions(gameStage);
-                timePassed = 0f;
-                myServer.setUpdatePositions(false);
-            } else {
-                if (timePassed >= 0.01f) {
-                    new UpdatePlayerPositions(gameStage);
-                    timePassed = 0f;
-                } else {
-                    timePassed += Gdx.graphics.getDeltaTime();
-                }
-            }
+            SendBodyStates.update();
+            SendCharacterStates.update();
         }
     }
 

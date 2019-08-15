@@ -16,6 +16,11 @@ public abstract class CollisionManager implements ContactListener {
         } else if (obj1 instanceof GameActor && obj2 instanceof FrostProjectile) {
             handleProjectileCollision((FrostProjectile) obj2, (GameActor) obj1);
         }
+        if (contact.getFixtureA().getUserData() instanceof String && contact.getFixtureA().getUserData().equals("feet")) {
+            handleLegsTouchGround((PlayerCharacter) obj1);
+        } else if (contact.getFixtureB().getUserData() instanceof String && contact.getFixtureB().getUserData().equals("feet")) {
+            handleLegsTouchGround((PlayerCharacter) obj2);
+        }
     }
 
     protected void handleProjectileCollision(FrostProjectile projectile, GameActor actor) {
@@ -24,9 +29,26 @@ public abstract class CollisionManager implements ContactListener {
         }
     }
 
+    private void handleLegsTouchGround(PlayerCharacter player) {
+        //player.setVerticalState(DynamicGameActor.VerticalState.GROUNDED);
+        player.increaseNrFeetContacts();
+    }
+
+    private void handleLegsLeaveGround(PlayerCharacter player) {
+        //player.setVerticalState(DynamicGameActor.VerticalState.FLYING);
+        player.decreaseNrFeetContacts();
+    }
+
     @Override
     public void endContact(Contact contact) {
+        Object obj1 = contact.getFixtureA().getBody().getUserData(),
+            obj2 = contact.getFixtureB().getBody().getUserData();
 
+        if (contact.getFixtureA().getUserData() instanceof String && contact.getFixtureA().getUserData().equals("feet")) {
+            handleLegsLeaveGround((PlayerCharacter) obj1);
+        } else if (contact.getFixtureB().getUserData() instanceof String && contact.getFixtureB().getUserData().equals("feet")) {
+            handleLegsLeaveGround((PlayerCharacter) obj2);
+        }
     }
 
     @Override

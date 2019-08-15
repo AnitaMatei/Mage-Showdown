@@ -9,7 +9,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.mageshowdown.gamelogic.*;
 import com.mageshowdown.packets.Network;
 import com.mageshowdown.packets.Network.CastSpellProjectile;
-import com.mageshowdown.packets.Network.KeyUp;
 import com.mageshowdown.packets.Network.MoveKeyDown;
 import com.mageshowdown.packets.Network.SwitchOrbs;
 import com.mageshowdown.utils.PrefsKeys;
@@ -27,9 +26,6 @@ public class ClientPlayerCharacter extends PlayerCharacter
     private TextureRegion currShieldFrame;
     private TextureRegion currFrozenFrame;
 
-    private boolean moveLeft = false;
-    private boolean moveRight = false;
-    private boolean jump = false;
     private boolean isMyPlayer;
     private boolean castSpellProjectile = false;
     private boolean castBomb = false;
@@ -67,14 +63,14 @@ public class ClientPlayerCharacter extends PlayerCharacter
 
     @Override
     public void act(float delta) {
-        setBodyFixedRotation();
         sendInputPackets();
         pickFrame();
-        calcState();
         updateOrbPosition();
         updateFrozenState();
         updateSpellState();
-        updateGameActor(delta);
+        super.act(delta);
+        //the sprite flip is calculated after the horizontal state and vertical state are determined in super.act()
+        calculateSpriteFlip();
     }
 
     @Override
@@ -92,6 +88,10 @@ public class ClientPlayerCharacter extends PlayerCharacter
     public void pickFrame() {
         if (animations.containsKey("energy shield"))
             currShieldFrame = animations.get("energy shield").getKeyFrame(passedTime, true);
+
+        if (verticalState == null || horizontalState == null)
+            return;
+
         String verticalStateString = verticalState.toString(),
                 horizontalStateString = horizontalState.toString();
         if (frozen) {
@@ -116,8 +116,14 @@ public class ClientPlayerCharacter extends PlayerCharacter
 
     }
 
+
+    //if keys were pressed this frame here is where we send the corresponding packets
     private void sendInputPackets() {
+        //we are only going to send input packets only for every client's own player
+        if(!isMyPlayer)
+            return;
         MoveKeyDown keyPress = new MoveKeyDown();
+
 
         if (moveLeft) {
             keyPress.keycode = Input.Keys.A;
@@ -125,44 +131,31 @@ public class ClientPlayerCharacter extends PlayerCharacter
         } else if (moveRight) {
             keyPress.keycode = Input.Keys.D;
             myClient.sendTCP(keyPress);
-        } else if (jump) {
+        }
+
+        /*
+        * the jump conditional is separate from the moving ones since
+        * we want to be able to jump and move at the same time
+        */
+        if (jump) {
             keyPress.keycode = Input.Keys.W;
             myClient.sendTCP(keyPress);
         }
         if (castSpellProjectile) {
             castMySpellProjectile();
-        } else if (castBomb) {
+        }else if (castBomb) {
             castMyBomb();
-        } else if (switchOrbs) {
+        }
+        if (switchOrbs) {
             switchMyOrbs();
             myClient.sendTCP(new SwitchOrbs());
             switchOrbs = false;
         }
     }
 
-    private void calcState() {
-        if (body != null) {
-            if (body.getLinearVelocity().y > 0.0001f || body.getLinearVelocity().y < -0.0001f) {
-                //if we detect that we start flying, then we need to reset the passed time so the animation wont loop
-                if (verticalState != VerticalState.FLYING)
-                    passedTime = 0f;
 
-                verticalState = VerticalState.FLYING;
-            } else verticalState = VerticalState.GROUNDED;
-
-
-            if (body.getLinearVelocity().x > 0.0001f) {
-                horizontalState = HorizontalState.GOING_RIGHT;
-            } else if (body.getLinearVelocity().x < -0.0001f) {
-                horizontalState = HorizontalState.GOING_LEFT;
-            } else {
-                horizontalState = HorizontalState.STANDING;
-            }
-
-            if (body.getLinearVelocity().y != 0) {
-                velocity.y = body.getLinearVelocity().y;
-            }
-        }
+    //here the sprite is flipped depending on how the character is moving or where the mouse is
+    private void calculateSpriteFlip() {
         if (currFrame != null) {
             switch (horizontalState) {
                 case GOING_LEFT:
@@ -175,7 +168,7 @@ public class ClientPlayerCharacter extends PlayerCharacter
                         currFrame.flip(true, false);
                     break;
                 case STANDING:
-                    //only the client's own character flips in the direction of the mouse
+                    //we only flip the client's own character in the direction of the mouse
                     if (isMyPlayer) {
                         if (GameWorld.getMousePos().x < getX()) {
                             currFrame.flip(!currFrame.isFlipX(), false);
@@ -247,10 +240,13 @@ public class ClientPlayerCharacter extends PlayerCharacter
     @Override
     public boolean keyDown(int keycode) {
         if (keycode == Input.Keys.D) {
+            horizontalState = HorizontalState.GOING_RIGHT;
             moveRight = true;
         } else if (keycode == Input.Keys.A) {
+            horizontalState = HorizontalState.GOING_LEFT;
             moveLeft = true;
         }
+
         if (keycode == Input.Keys.W) {
             jump = true;
         }
@@ -263,16 +259,13 @@ public class ClientPlayerCharacter extends PlayerCharacter
 
     @Override
     public boolean keyUp(int keycode) {
-        KeyUp ku = new KeyUp();
+        Network.MoveKeyUp ku = new Network.MoveKeyUp();
         ku.keycode = keycode;
         if (keycode == Input.Keys.A) {
             moveLeft = false;
             myClient.sendTCP(ku);
         } else if (keycode == Input.Keys.D) {
             moveRight = false;
-            myClient.sendTCP(ku);
-        } else if (keycode == Input.Keys.W) {
-            jump = false;
             myClient.sendTCP(ku);
         }
         return true;

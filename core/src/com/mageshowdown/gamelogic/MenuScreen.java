@@ -145,7 +145,7 @@ public class MenuScreen implements Screen {
             @Override
             public void clicked(InputEvent even, float x, float y) {
                 ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                if (GameWorld.world.getBodyCount() == 0) {
+                if (GameWorld.WORLD.getBodyCount() == 0) {
                     String ipAddress = addressField.getText();
                     prefs.putString(PrefsKeys.LASTENTEREDIP, ipAddress).flush();
                     clientStart(ipAddress);
