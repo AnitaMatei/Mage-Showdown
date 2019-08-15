@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -25,18 +26,13 @@ import java.io.IOException;
 import static com.mageshowdown.gameclient.ClientAssetLoader.prefs;
 
 public class MenuScreen implements Screen {
-    public enum StagePhase {
-        MAIN_MENU_STAGE,
-        OPTIONS_STAGE
-    }
-
     //Singleton instantiation
     private static final MenuScreen INSTANCE = new MenuScreen();
     private static Viewport viewport;
     private static Batch batch;
-
     private static Stage mainMenuStage;
-    private static Stage menuOptionsStage;
+    private static OptionsStage menuOptionsStage;
+    private static Table root;
     private static StagePhase stagePhase;
     private GameClient myClient = GameClient.getInstance();
 
@@ -50,6 +46,10 @@ public class MenuScreen implements Screen {
 
     public static Stage getMenuOptionsStage() {
         return menuOptionsStage;
+    }
+
+    public static Table getRootTable() {
+        return root;
     }
 
     public static Batch getBatch() {
@@ -123,7 +123,7 @@ public class MenuScreen implements Screen {
         Image background = new Image(ClientAssetLoader.menuBackground);
         background.setFillParent(true);
 
-        Table root = new Table();
+        root = new Table();
         root.setFillParent(true);
         //root.debug();
 
@@ -158,7 +158,9 @@ public class MenuScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
                 menuOptionsStage = new OptionsStage(viewport, batch, ClientAssetLoader.menuBackground);
+                menuOptionsStage.getRootTable().getColor().a = 0f;
                 stagePhase = StagePhase.OPTIONS_STAGE;
+                menuOptionsStage.getRootTable().addAction(Actions.fadeIn(0.1f));
                 Gdx.input.setInputProcessor(menuOptionsStage);
             }
         });
@@ -202,5 +204,10 @@ public class MenuScreen implements Screen {
             dialog.show(mainMenuStage);
         }
         myClient.addListener(new ClientListener());
+    }
+
+    public enum StagePhase {
+        MAIN_MENU_STAGE,
+        OPTIONS_STAGE
     }
 }

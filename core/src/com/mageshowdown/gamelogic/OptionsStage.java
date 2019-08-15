@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -60,6 +61,10 @@ public class OptionsStage extends Stage {
         init(backgroundTexture);
     }
 
+    public Table getRootTable() {
+        return root;
+    }
+
     private void init(Texture backgroundTexture) {
         this.backgroundTexture = backgroundTexture;
         displayModes = Gdx.graphics.getDisplayModes();
@@ -73,6 +78,7 @@ public class OptionsStage extends Stage {
         audioDevice = Gdx.audio.newAudioDevice(samples, true);
         audioRecorder = Gdx.audio.newAudioRecorder(samples, true);
     }
+
 
     private void setupLayoutView() {
         background = new Image(backgroundTexture);
@@ -307,10 +313,14 @@ public class OptionsStage extends Stage {
 
                 if (MageShowdownClient.getInstance().getScreen().equals(MenuScreen.getInstance())) {
                     MenuScreen.setStagePhase(MenuScreen.StagePhase.MAIN_MENU_STAGE);
+                    MenuScreen.getRootTable().getColor().a = 0f;
+                    MenuScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
                     Gdx.input.setInputProcessor(MenuScreen.getMainMenuStage());
                 }
                 if (MageShowdownClient.getInstance().getScreen().equals(GameScreen.getInstance())) {
                     GameScreen.setGameState(GameScreen.GameState.GAME_PAUSED);
+                    GameScreen.getRootTable().getColor().a = 0f;
+                    GameScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
                     Gdx.input.setInputProcessor(GameScreen.getEscMenuStage());
                 }
                 stageDispose();

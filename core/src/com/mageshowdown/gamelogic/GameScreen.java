@@ -3,13 +3,13 @@ package com.mageshowdown.gamelogic;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -33,7 +33,12 @@ public class GameScreen implements Screen {
     private static Stage escMenuStage;
     private static ScoreboardStage scoreboardStage;
     private static RoundEndStage roundEndStage;
+    private static Table root;
     private static GameState gameState;
+
+    private GameScreen() {
+
+    }
 
     public static void start() {
         viewport = new FitViewport(1920, 1080);
@@ -76,12 +81,16 @@ public class GameScreen implements Screen {
         GameScreen.gameState = gameState;
     }
 
+    public static Table getRootTable() {
+        return root;
+    }
+
     private static void prepareEscMenu() {
         Image background = new Image(ClientAssetLoader.menuBackground);
         background.setFillParent(true);
         background.setColor(0, 0, 0, 0.8f);
 
-        Table root = new Table();
+        root = new Table();
         root.setFillParent(true);
         //root.debug();
 
@@ -114,7 +123,9 @@ public class GameScreen implements Screen {
                 ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
 
                 gameOptionsStage = new OptionsStage(viewport, batch, ClientAssetLoader.solidBlack);
+                gameOptionsStage.getRootTable().getColor().a = 0f;
                 gameState = GameState.GAME_OPTIONS;
+                gameOptionsStage.getRootTable().addAction(Actions.fadeIn(0.1f));
                 Gdx.input.setInputProcessor(gameOptionsStage);
             }
         });
@@ -168,11 +179,15 @@ public class GameScreen implements Screen {
 
     private void gameRunningInput() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && gameState == GameState.GAME_RUNNING) {
+            root.getColor().a = 0;
             gameState = GameState.GAME_PAUSED;
+            root.addAction(Actions.fadeIn(0.1f));
             Gdx.input.setInputProcessor(escMenuStage);
         }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.TAB) && gameState == GameState.GAME_RUNNING)
+        if (Gdx.input.isKeyJustPressed(Input.Keys.TAB) && gameState == GameState.GAME_RUNNING) {
             gameState = GameState.SCOREBOARD;
+            scoreboardStage.addAction(Actions.fadeIn(0.1f));
+        }
     }
 
     private void gamePausedInput() {
@@ -183,8 +198,10 @@ public class GameScreen implements Screen {
     }
 
     private void scoreboardInput() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.TAB) && gameState == GameState.SCOREBOARD)
-            gameState = GameState.GAME_RUNNING;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.TAB) && gameState == GameState.SCOREBOARD) {
+            scoreboardStage.addAction(Actions.sequence(Actions.fadeOut(0.1f)
+                    , Actions.run(() -> gameState = GameState.GAME_RUNNING)));
+        }
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && gameState == GameState.SCOREBOARD) {
             gameState = GameState.GAME_PAUSED;
             Gdx.input.setInputProcessor(escMenuStage);
@@ -270,11 +287,14 @@ public class GameScreen implements Screen {
     }
 
     private static class ScoreboardStage extends Stage {
-
-        private ClientGameStage gameStage = GameScreen.getGameStage();
-        private ClientRound round = ClientRound.getInstance();
+        private Array<ClientPlayerCharacter> sortedPlayers = gameStage.getSortedPlayers();
         private Label timeLeftLabel;
-        private PlayerStatsList psl;
+        private Array<String> playerNames = new Array<>();
+        private Array<Integer> playerKills = new Array<>();
+        private Array<Integer> playerScore = new Array<>();
+        private List<String> nameListWidget = new List<>(uiSkin);
+        private List<Integer> killsListWidget = new List<>(uiSkin);
+        private List<Integer> scoreListWidget = new List<>(uiSkin);
 
         private ScoreboardStage(Viewport viewport, Batch batch) {
             super(viewport, batch);
@@ -282,28 +302,21 @@ public class GameScreen implements Screen {
         }
 
         private void init() {
-            psl = new PlayerStatsList();
             Table root = new Table(uiSkin);
             root.setBackground("default-window");
             root.setColor(0, 0, 0, 0.8f);
             //root.debug();
 
-            Label.LabelStyle timeLeftStyle = new Label.LabelStyle(ClientAssetLoader.bigSizeFont, Color.WHITE);
-            timeLeftLabel = new Label("", timeLeftStyle);
+            timeLeftLabel = new Label("", uiSkin, "menu-label");
             root.top();
-            root.add(new Label("TIME LEFT", timeLeftStyle)).expandX().colspan(3);
+            root.add(new Label("TIME LEFT", uiSkin, "menu-label")).expandX().colspan(3);
             root.row();
             root.add(timeLeftLabel).expandX().colspan(3);
             root.row();
             root.defaults().pad(1, 1, 1, 1).center().fill();
-            root.add(new Label("Player Name", uiSkin));
-            root.add(new Label("Kills", uiSkin));
-            root.add(new Label("Score", uiSkin));
+            root.add(new Label("Player Name", uiSkin), new Label("Kills", uiSkin), new Label("Score", uiSkin));
             root.row();
-
-            root.add(psl.nameListWidget);
-            root.add(psl.killsListWidget);
-            root.add(psl.scoreListWidget);
+            root.add(nameListWidget, killsListWidget, scoreListWidget);
 
             Container<Table> wrapper = new Container<>(root);
             wrapper.setFillParent(true);
@@ -312,44 +325,26 @@ public class GameScreen implements Screen {
             wrapper.width(WIDTH).height(HEIGHT);
 
             this.addActor(wrapper);
+            this.getRoot().getColor().a = 0f;
         }
 
         @Override
         public void act() {
             super.act();
 
-            timeLeftLabel.setText((int) (Round.ROUND_LENGTH - round.timePassed));
-            psl.update();
-        }
-
-        private class PlayerStatsList {
-            Array<String> playerNames;
-            Array<Integer> playerKills;
-            Array<Integer> playerScore;
-            List<String> nameListWidget = new List<>(uiSkin);
-            List<Integer> killsListWidget = new List<>(uiSkin);
-            List<Integer> scoreListWidget = new List<>(uiSkin);
-
-            private PlayerStatsList() {
-                playerNames = new Array<>();
-                playerKills = new Array<>();
-                playerScore = new Array<>();
+            timeLeftLabel.setText((int) (Round.ROUND_LENGTH - ClientRound.getInstance().timePassed));
+            playerNames.clear();
+            playerKills.clear();
+            playerScore.clear();
+            sortedPlayers.sort((o1, o2) -> Integer.compare(o2.getScore(), o1.getScore()));
+            for (ClientPlayerCharacter player : sortedPlayers) {
+                playerNames.add(player.getUserName());
+                playerKills.add(player.getKills());
+                playerScore.add(player.getScore());
             }
-
-            void update() {
-                playerNames.clear();
-                playerKills.clear();
-                playerScore.clear();
-                for (ClientPlayerCharacter player : gameStage.getSortedPlayers()) {
-                    playerNames.add(player.getUserName());
-                    playerKills.add(player.getKills());
-                    playerScore.add(player.getScore());
-                }
-                gameStage.getSortedPlayers().sort((o1, o2) -> Integer.compare(o2.getScore(), o1.getScore()));
-                nameListWidget.setItems(playerNames);
-                killsListWidget.setItems(playerKills);
-                scoreListWidget.setItems(playerScore);
-            }
+            nameListWidget.setItems(playerNames);
+            killsListWidget.setItems(playerKills);
+            scoreListWidget.setItems(playerScore);
         }
     }
 
@@ -364,8 +359,6 @@ public class GameScreen implements Screen {
         private float maxCapacity;
         private float currCapacity;
 
-        private ClientGameStage gameStage = GameScreen.getGameStage();
-
         private GameHUDStage(Viewport viewport, Batch batch) {
             super(viewport, batch);
             init();
@@ -376,13 +369,12 @@ public class GameScreen implements Screen {
             root.setFillParent(true);
             //root.debug();
 
-            Label.LabelStyle resourceTextStyle = new Label.LabelStyle(ClientAssetLoader.bigSizeFont, Color.WHITE);
             TiledDrawable tiledDrawable = hudSkin.getTiledDrawable("health-orb-fill");
             tiledDrawable.setMinHeight(0f);
             hudSkin.get("health-orb", ProgressBar.ProgressBarStyle.class).knobBefore = tiledDrawable;
             healthOrb = new ProgressBar(0f, PlayerCharacter.getMaxHealth(), 1f, true, hudSkin, "health-orb");
             healthOrb.setAnimateDuration(0.1f);
-            healthText = new Label("", resourceTextStyle);
+            healthText = new Label("", uiSkin, "menu-label");
             healthText.setAlignment(Align.center);
             Stack healthStack = new Stack();
             healthStack.add(healthOrb);
@@ -393,7 +385,7 @@ public class GameScreen implements Screen {
             hudSkin.get("mana-vertical", ProgressBar.ProgressBarStyle.class).knobBefore = tiledDrawable;
             shieldBar = new ProgressBar(0f, PlayerCharacter.getMaxShield(), 1f, true, hudSkin, "mana-vertical");
             shieldBar.setAnimateDuration(0.1f);
-            shieldText = new Label("", resourceTextStyle);
+            shieldText = new Label("", uiSkin, "menu-label");
             shieldText.setAlignment(Align.center);
             Stack shieldStack = new Stack();
             shieldStack.add(shieldBar);
@@ -404,7 +396,7 @@ public class GameScreen implements Screen {
             hudSkin.get("mana", ProgressBar.ProgressBarStyle.class).knobBefore = tiledDrawable;
             manaBar = new ProgressBar(0, 25, 1f, false, hudSkin, "mana");
             manaBar.setAnimateDuration(0.1f);
-            manaText = new Label("", resourceTextStyle);
+            manaText = new Label("", uiSkin, "menu-label");
             manaText.setAlignment(Align.center);
             Stack manaStack = new Stack();
             manaStack.add(manaBar);
@@ -446,7 +438,7 @@ public class GameScreen implements Screen {
             background.setFillParent(true);
             background.setColor(0, 0, 0, 0.8f);
 
-            roundEndLabel = new Label("", ClientAssetLoader.uiSkin.get("menu-label", Label.LabelStyle.class));
+            roundEndLabel = new Label("", uiSkin, "menu-label");
             Container<Label> wrapper = new Container<>(roundEndLabel);
             wrapper.setFillParent(true);
 
