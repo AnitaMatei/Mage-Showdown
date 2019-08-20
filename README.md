@@ -5,6 +5,7 @@ The project was created with the help of https://github.com/HalalaiMircea.
 
 ## Created using
 
+* java
 * libgdx for graphics, input and logic
 * box2d for physics
 * kryonet for networking
