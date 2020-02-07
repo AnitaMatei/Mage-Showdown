@@ -4,9 +4,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.mageshowdown.gameclient.ClientAssetLoader;
 import com.mageshowdown.gameclient.MageShowdownClient;
@@ -30,9 +32,10 @@ public class LoadingScreen implements Screen {
         if (manager.isFinished()) {
             ClientAssetLoader.getInstance().setLoadingAssets();
 
-            //TiledDrawable tiledDrawable = ClientAssetLoader.hudSkin.getTiledDrawable("progress-bar-life");
-            //tiledDrawable.setMinWidth(0f);
-            //ClientAssetLoader.hudSkin.get("default-horizontal", ProgressBar.ProgressBarStyle.class).knobBefore = tiledDrawable;
+//            TiledDrawable tiledDrawable = ClientAssetLoader.hudSkin.getTiledDrawable("progress-bar-life");
+//            tiledDrawable.setMinWidth(0f);
+//            tiledDrawable.setLeftWidth(100f);
+//            ClientAssetLoader.hudSkin.get("default-horizontal", ProgressBar.ProgressBarStyle.class).knobBefore = tiledDrawable;
             loadingBar = new ProgressBar(0f, 1f, 0.1f, false, ClientAssetLoader.hudSkin, "default-horizontal");
             loadingBar.setPosition(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
             table.add(loadingBar).width(500);

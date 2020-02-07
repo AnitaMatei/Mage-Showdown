@@ -88,8 +88,11 @@ public class OptionsStage extends Stage {
 
         root = new Table();
         root.setFillParent(true);
-        //root.debug();
+//        root.debug();
         Table contextTable = new Table();
+        ScrollPane contScroll = new ScrollPane(contextTable, uiSkin, "transp-scrollpane");
+        contScroll.setFadeScrollBars(false);
+
         //contextTable.debug();
         Table bottomTable = new Table();
         //bottomTable.debug();
@@ -148,8 +151,8 @@ public class OptionsStage extends Stage {
         bottomTable.defaults().space(20, 25, 20, 25).width(200).height(60);
         bottomTable.add(backButton, applyButton);
 
-        //Finally, here we position the 2 tables into the root table
-        root.add(contextTable).expand();
+        //Finally, here we position the scrollpane and bottomtable in the root one
+        root.add(contScroll).expand().width(contScroll.getPrefWidth() + 50);
         root.row();
         root.add(bottomTable).bottom().left().pad(20, 20, 20, 20);
     }
@@ -311,13 +314,13 @@ public class OptionsStage extends Stage {
             public void changed(ChangeEvent event, Actor actor) {
                 ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
 
-                if (MageShowdownClient.getInstance().getScreen().equals(MenuScreen.getInstance())) {
+                if (MageShowdownClient.getInstance().getScreen() == MenuScreen.getInstance()) {
                     MenuScreen.setStagePhase(MenuScreen.StagePhase.MAIN_MENU_STAGE);
                     MenuScreen.getRootTable().getColor().a = 0f;
                     MenuScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
                     Gdx.input.setInputProcessor(MenuScreen.getMainMenuStage());
                 }
-                if (MageShowdownClient.getInstance().getScreen().equals(GameScreen.getInstance())) {
+                if (MageShowdownClient.getInstance().getScreen() == GameScreen.getInstance()) {
                     GameScreen.setGameState(GameScreen.GameState.GAME_PAUSED);
                     GameScreen.getRootTable().getColor().a = 0f;
                     GameScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
@@ -329,11 +332,8 @@ public class OptionsStage extends Stage {
     }
 
     private void stageDispose() {
-        if (MageShowdownClient.getInstance().getScreen().equals(MenuScreen.getInstance()))
-            MenuScreen.getMenuOptionsStage().dispose();
-        if (MageShowdownClient.getInstance().getScreen().equals(GameScreen.getInstance()))
-            GameScreen.getGameOptionsStage().dispose();
         audioDevice.dispose();
         audioRecorder.dispose();
+        this.dispose();
     }
 }

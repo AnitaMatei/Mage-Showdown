@@ -48,11 +48,11 @@ public class MageShowdownClient extends Game {
     public void render() {
         super.render();
         if (canDrawFont)
-            if (this.getScreen().equals(MenuScreen.getInstance()) && MenuScreen.getBatch() != null) {
+            if (this.getScreen() == MenuScreen.getInstance() && MenuScreen.getBatch() != null) {
                 MenuScreen.getBatch().begin();
                 fpsFont.draw(MenuScreen.getBatch(), Integer.toString(Gdx.graphics.getFramesPerSecond()), 0, Gdx.graphics.getHeight());
                 MenuScreen.getBatch().end();
-            } else if (this.getScreen().equals(GameScreen.getInstance()) && GameScreen.getBatch() != null) {
+            } else if (this.getScreen() == GameScreen.getInstance() && GameScreen.getBatch() != null) {
                 GameScreen.getBatch().begin();
                 fpsFont.draw(GameScreen.getBatch(), Integer.toString(Gdx.graphics.getFramesPerSecond()), 0, Gdx.graphics.getHeight());
                 GameScreen.getBatch().end();

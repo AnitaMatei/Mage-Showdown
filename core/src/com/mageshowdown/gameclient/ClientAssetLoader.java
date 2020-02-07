@@ -66,6 +66,7 @@ public class ClientAssetLoader {
     public static TiledMap map1;
     public static TiledMap dungeonMap;
     public static TiledMap purpleMap;
+    //credits file
 
     public AssetManager manager;
 
@@ -215,6 +216,11 @@ public class ClientAssetLoader {
         uiSkin.get("default", SelectBox.SelectBoxStyle.class).font =
                 uiSkin.get("default", SelectBox.SelectBoxStyle.class).listStyle.font = bigSizeFont;
         uiSkin.add("menu-label", new Label.LabelStyle(bigSizeFont, Color.WHITE), Label.LabelStyle.class);
+
+        ScrollPane.ScrollPaneStyle transpSpStyle =
+                new ScrollPane.ScrollPaneStyle(uiSkin.get("default", ScrollPane.ScrollPaneStyle.class));
+        transpSpStyle.background = null;
+        uiSkin.add("transp-scrollpane", transpSpStyle);
 
         map1 = manager.get("Maps/level1.tmx", TiledMap.class);
         dungeonMap = manager.get("Maps/level2.tmx", TiledMap.class);
