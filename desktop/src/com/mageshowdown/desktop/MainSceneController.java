@@ -42,6 +42,7 @@ public class MainSceneController implements Initializable {
         config.samples = 4;
         config.title = "Mage Showdown";
         config.addIcon("icon32.png", Files.FileType.Internal);
+        config.addIcon("icon64.png", Files.FileType.Internal);
 
         new LwjglApplication(MageShowdownClient.getInstance(), config);
         DesktopClientLauncher.mainStage.close();

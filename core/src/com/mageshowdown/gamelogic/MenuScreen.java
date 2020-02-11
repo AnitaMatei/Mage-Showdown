@@ -1,7 +1,9 @@
 package com.mageshowdown.gamelogic;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -9,10 +11,10 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.actions.TemporalAction;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mageshowdown.gameclient.ClientAssetLoader;
@@ -22,19 +24,22 @@ import com.mageshowdown.gameclient.MageShowdownClient;
 import com.mageshowdown.packets.Network;
 import com.mageshowdown.utils.PrefsKeys;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Scanner;
 
 import static com.mageshowdown.gameclient.ClientAssetLoader.prefs;
+import static com.mageshowdown.gameclient.ClientAssetLoader.uiSkin;
 
 public class MenuScreen implements Screen {
-    //Singleton instantiation
+
     private static final MenuScreen INSTANCE = new MenuScreen();
     private static Viewport viewport;
     private static Batch batch;
     private static Stage mainMenuStage;
     private static OptionsStage menuOptionsStage;
-    private static Stage creditsStage;
+    private static CreditsStage creditsStage;
     private static Table root;
     private static StagePhase stagePhase;
     private GameClient myClient = GameClient.getInstance();
@@ -65,18 +70,17 @@ public class MenuScreen implements Screen {
 //        viewport = new FitViewport(1920, 1080);
         viewport = new ScreenViewport();
 //        viewport.setUnitsPerPixel(0.75f);
-
         batch = new SpriteBatch();
 
         mainMenuStage = new Stage(viewport, batch);
         prepareMainMenuStage();
-
         stagePhase = StagePhase.MAIN_MENU_STAGE;
         Gdx.input.setInputProcessor(mainMenuStage);
+
         ClientAssetLoader.menuMusic.setVolume(prefs.getFloat(PrefsKeys.MUSICVOLUME));
         ClientAssetLoader.menuMusic.play();
 
-        //List<InetAddress> addressList;
+        List<InetAddress> addressList;
         new Thread(() -> /*addressList = */myClient.discoverHosts(Network.UDP_PORT, 5000)).start();
     }
 
@@ -135,11 +139,11 @@ public class MenuScreen implements Screen {
         root.setFillParent(true);
         //root.debug();
 
-        TextButton connectButton = new TextButton("Connect", ClientAssetLoader.uiSkin);
-        TextButton optionsButton = new TextButton("Options...", ClientAssetLoader.uiSkin);
-        TextButton creditsButton = new TextButton("Credits", ClientAssetLoader.uiSkin);
-        TextButton quitButton = new TextButton("Quit Game", ClientAssetLoader.uiSkin);
-        final TextField addressField = new TextField(prefs.getString(PrefsKeys.LASTENTEREDIP), ClientAssetLoader.uiSkin);
+        TextButton connectButton = new TextButton("Connect", uiSkin);
+        TextButton optionsButton = new TextButton("Options...", uiSkin);
+        TextButton creditsButton = new TextButton("Credits", uiSkin);
+        TextButton quitButton = new TextButton("Quit Game", uiSkin);
+        final TextField addressField = new TextField(prefs.getString(PrefsKeys.LASTENTEREDIP), uiSkin);
 
         root.defaults().space(20, 25, 20, 25).width(290).height(60);
         root.add(connectButton);
@@ -181,8 +185,7 @@ public class MenuScreen implements Screen {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                creditsStage = new Stage(viewport, batch);
-                prepareCreditsStage();
+                creditsStage = new CreditsStage(viewport, batch);
                 stagePhase = StagePhase.CREDITS_STAGE;
                 Gdx.input.setInputProcessor(creditsStage);
             }
@@ -200,54 +203,6 @@ public class MenuScreen implements Screen {
         mainMenuStage.addActor(root);
     }
 
-    private void prepareCreditsStage() {
-        Table lTable = new Table();
-//        lTable.debug();
-        boolean firstLine = true;
-        try {
-            Scanner scanner = new Scanner(new File("UIAssets/credits.txt"));
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                if (line != null) {
-                    if (firstLine) {
-                        lTable.add(new Label("Credits", ClientAssetLoader.uiSkin, "menu-label"));
-                        firstLine = false;
-                    } else
-                        lTable.add(new Label(line, ClientAssetLoader.uiSkin, "menu-label"));
-                }
-                lTable.row();
-            }
-            scanner.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        ScrollPane scrollPane = new ScrollPane(lTable, ClientAssetLoader.uiSkin, "transp-scrollpane");
-        TextButton backBtn = new TextButton("Back", ClientAssetLoader.uiSkin);
-
-        Table rootTable = new Table();
-        rootTable.setFillParent(true);
-//        rootTable.debug();
-//        rootTable.defaults().space(20, 25, 20, 25).width(290).height(60);
-        rootTable.add(scrollPane).expand().width(lTable.getPrefWidth() + 40);
-        rootTable.row();
-        rootTable.defaults().space(20, 25, 20, 25).width(200).height(60);
-        rootTable.add(backBtn).expandY();
-
-        backBtn.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                stagePhase = StagePhase.MAIN_MENU_STAGE;
-                Gdx.input.setInputProcessor(mainMenuStage);
-                creditsStage.dispose();
-            }
-        });
-
-//        creditsStage.addActor(new Image(ClientAssetLoader.menuBackground));
-        creditsStage.addActor(rootTable);
-    }
-
     private void clientStart(String ipAddress) {
         try {
             myClient.setUserName(prefs.getString(PrefsKeys.PLAYERNAME));
@@ -260,9 +215,9 @@ public class MenuScreen implements Screen {
         } catch (IOException e) {
             ClientAssetLoader.gameplayMusic.stop();
 
-            final Dialog dialog = new Dialog("", ClientAssetLoader.uiSkin);
-            dialog.text(e.toString(), ClientAssetLoader.uiSkin.get("menu-label", Label.LabelStyle.class));
-            Button backBtn = new TextButton("Back", ClientAssetLoader.uiSkin);
+            final Dialog dialog = new Dialog("", uiSkin);
+            dialog.text(e.toString(), uiSkin.get("menu-label", Label.LabelStyle.class));
+            Button backBtn = new TextButton("Back", uiSkin);
             backBtn.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
@@ -278,8 +233,85 @@ public class MenuScreen implements Screen {
     }
 
     public enum StagePhase {
-        MAIN_MENU_STAGE,
-        OPTIONS_STAGE,
-        CREDITS_STAGE
+        MAIN_MENU_STAGE, OPTIONS_STAGE, CREDITS_STAGE
+    }
+
+    private static class CreditsStage extends Stage {
+        boolean isNearEnd = false;
+
+        public CreditsStage(Viewport viewport, Batch batch) {
+            super(viewport, batch);
+             /*We read the credits file line by line and put each one in a label. All the labels are added to a table,
+             which is scrolled my a scrollpane*/
+            Table lTable = new Table(uiSkin);
+            ScrollPane scrollPane = new ScrollPane(lTable, uiSkin, "transp-scrollpane");
+            scrollPane.clearListeners();
+            scrollPane.setSmoothScrolling(false);
+
+            lTable.add("").height(Gdx.graphics.getHeight() * 0.5f);
+            lTable.row();
+            boolean firstLine = true;
+            try {
+                Scanner scanner = new Scanner(new File("UIAssets/credits.txt"));
+                while (scanner.hasNextLine()) {
+                    String line = scanner.nextLine();
+                    if (line != null) {
+                        if (firstLine) {
+                            // We do this because of missing char in the font file
+                            lTable.add(new Label("Credits", new Label.LabelStyle(ClientAssetLoader.hugeSizeFont,
+                                    Color.YELLOW)));
+                            firstLine = false;
+                        } else
+                            lTable.add(new Label(line, uiSkin, "menu-label"));
+                    }
+                    lTable.row();
+                }
+                scanner.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            lTable.add("").height(Gdx.graphics.getHeight() / 1.25f);
+
+            Table rootTable = new Table();
+            rootTable.setFillParent(true);
+
+            rootTable.add(scrollPane).expand().width(lTable.getPrefWidth());
+            rootTable.row();
+            this.addActor(rootTable);
+
+            final float duration = 3f;
+            TemporalAction scrollAction = new TemporalAction() {
+                @Override
+                protected void update(float percent) {
+                    if (actor instanceof ScrollPane) {
+                        ((ScrollPane) actor).layout();
+                        ((ScrollPane) actor).setScrollPercentY(percent);
+                        if (this.getDuration() - this.getTime() <= duration && !isNearEnd) {
+                            scrollPane.addAction(
+                                    Actions.sequence(Actions.fadeOut(duration), Actions.run(() -> returnToMenu()))
+                            );
+                            isNearEnd = true;
+                        }
+                    }
+                }
+
+            };
+            scrollAction.setDuration(15);
+            scrollPane.getColor().a = 0f;
+            scrollPane.addAction(Actions.sequence(Actions.fadeIn(duration), scrollAction));
+        }
+
+        private void returnToMenu() {
+            stagePhase = StagePhase.MAIN_MENU_STAGE;
+            Gdx.input.setInputProcessor(mainMenuStage);
+            this.dispose();
+        }
+
+        @Override
+        public boolean keyDown(int keyCode) {
+            if (keyCode == Input.Keys.ESCAPE)
+                returnToMenu();
+            return true;
+        }
     }
 }

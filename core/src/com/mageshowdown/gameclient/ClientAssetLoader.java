@@ -23,7 +23,7 @@ public class ClientAssetLoader {
     public static Skin hudSkin;
     public static Texture menuBackground;
     //fonts
-    public static BitmapFont normalSizeFont;
+    public static BitmapFont hugeSizeFont;
     public static BitmapFont bigSizeFont;
     //player animations
     public static Texture friendlyIdleSpritesheet;
@@ -150,10 +150,10 @@ public class ClientAssetLoader {
         manager.setLoader(FreeTypeFontGenerator.class, new FreeTypeFontGeneratorLoader(resolver));
         manager.setLoader(BitmapFont.class, ".ttf", new FreetypeFontLoader(resolver));
 
-//        FreetypeFontLoader.FreeTypeFontLoaderParameter parameter = new FreetypeFontLoader.FreeTypeFontLoaderParameter();
-//        parameter.fontFileName = "UIAssets/joystix monospace.ttf";
-//        parameter.fontParameters.size = 12;
-//        manager.load("joystixNormal.ttf", BitmapFont.class, parameter);
+        FreetypeFontLoader.FreeTypeFontLoaderParameter hugeParameter = new FreetypeFontLoader.FreeTypeFontLoaderParameter();
+        hugeParameter.fontFileName = "UIAssets/joystix monospace.ttf";
+        hugeParameter.fontParameters.size = 48;
+        manager.load("joystixHuge.ttf", BitmapFont.class, hugeParameter);
 
         FreetypeFontLoader.FreeTypeFontLoaderParameter bigParameter = new FreetypeFontLoader.FreeTypeFontLoaderParameter();
         bigParameter.fontFileName = "UIAssets/joystix monospace.ttf";
@@ -209,7 +209,7 @@ public class ClientAssetLoader {
         uiSkin = manager.get("UIAssets/uiskin.json", Skin.class);
 
 
-        //normalSizeFont = manager.get("joystixNormal.ttf", BitmapFont.class);
+        hugeSizeFont = manager.get("joystixHuge.ttf", BitmapFont.class);
 
         uiSkin.get("default", TextButton.TextButtonStyle.class).font = bigSizeFont;
         uiSkin.get("default", TextField.TextFieldStyle.class).font = bigSizeFont;
