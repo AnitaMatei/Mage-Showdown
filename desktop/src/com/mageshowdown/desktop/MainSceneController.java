@@ -56,11 +56,11 @@ public class MainSceneController implements Initializable {
 
         int width = prefs.getInteger(PrefsKeys.WIDTH);
         int height = prefs.getInteger(PrefsKeys.HEIGHT);
-        int refreshRate = prefs.getInteger(PrefsKeys.REFRESHRATE);
+        int rate = prefs.getInteger(PrefsKeys.REFRESHRATE);
         if (prefs.getBoolean(PrefsKeys.FULLSCREEN))
-            for (Graphics.DisplayMode each : Gdx.graphics.getDisplayModes()) {
-                if (each.width == width && each.height == height && each.refreshRate == refreshRate) {
-                    Gdx.graphics.setFullscreenMode(each);
+            for (Graphics.DisplayMode mode : Gdx.graphics.getDisplayModes()) {
+                if (mode.width == width && mode.height == height && mode.refreshRate == rate) {
+                    Gdx.graphics.setFullscreenMode(mode);
                     break;
                 }
             }

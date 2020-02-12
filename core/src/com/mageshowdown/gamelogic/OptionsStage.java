@@ -2,6 +2,7 @@ package com.mageshowdown.gamelogic;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.AudioDevice;
 import com.badlogic.gdx.audio.AudioRecorder;
 import com.badlogic.gdx.graphics.Texture;
@@ -279,10 +280,10 @@ public class OptionsStage extends Stage {
 
                 String[] str = resSelectBox.getSelected().split("x");
                 if (modeSelectBox.getSelected().equals("Fullscreen")) {
-                    for (Graphics.DisplayMode each : displayModes)
-                        if (each.width == Integer.parseInt(str[0]) && each.height == Integer.parseInt(str[1])
-                                && each.refreshRate == refreshSelectBox.getSelected()) {
-                            Gdx.graphics.setFullscreenMode(each);
+                    for (Graphics.DisplayMode mode : displayModes)
+                        if (mode.width == Integer.parseInt(str[0]) && mode.height == Integer.parseInt(str[1])
+                                && mode.refreshRate == refreshSelectBox.getSelected()) {
+                            Gdx.graphics.setFullscreenMode(mode);
                             break;
                         }
                 } else Gdx.graphics.setWindowedMode(Integer.parseInt(str[0]), Integer.parseInt(str[1]));
@@ -302,6 +303,7 @@ public class OptionsStage extends Stage {
                 prefs.putBoolean(PrefsKeys.VSYNC, vsyncCheckBox.isChecked());
                 prefs.putBoolean(PrefsKeys.SHOWFPS, showFPSCheckBox.isChecked());
 
+                //Write changes to disk
                 prefs.flush();
 
                 //when we apply new graphics settings the resolution may have changed so we update the resolution scale
@@ -313,22 +315,32 @@ public class OptionsStage extends Stage {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-
-                if (MageShowdownClient.getInstance().getScreen() == MenuScreen.getInstance()) {
-                    MenuScreen.setStagePhase(MenuScreen.StagePhase.MAIN_MENU_STAGE);
-                    MenuScreen.getRootTable().getColor().a = 0f;
-                    MenuScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
-                    Gdx.input.setInputProcessor(MenuScreen.getMainMenuStage());
-                }
-                if (MageShowdownClient.getInstance().getScreen() == GameScreen.getInstance()) {
-                    GameScreen.setGameState(GameScreen.GameState.GAME_PAUSED);
-                    GameScreen.getRootTable().getColor().a = 0f;
-                    GameScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
-                    Gdx.input.setInputProcessor(GameScreen.getEscMenuStage());
-                }
-                stageDispose();
+                goToPreviousMenu();
             }
         });
+    }
+
+    private void goToPreviousMenu() {
+        if (MageShowdownClient.getInstance().getScreen() == MenuScreen.getInstance()) {
+            MenuScreen.setStagePhase(MenuScreen.StagePhase.MAIN_MENU_STAGE);
+            MenuScreen.getRootTable().getColor().a = 0f;
+            MenuScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
+            Gdx.input.setInputProcessor(MenuScreen.getMainMenuStage());
+        }
+        if (MageShowdownClient.getInstance().getScreen() == GameScreen.getInstance()) {
+            GameScreen.setState(GameScreen.State.GAME_PAUSED);
+            GameScreen.getRootTable().getColor().a = 0f;
+            GameScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
+            Gdx.input.setInputProcessor(GameScreen.getEscMenuStage());
+        }
+        stageDispose();
+    }
+
+    @Override
+    public boolean keyDown(int keyCode) {
+        if (keyCode == Input.Keys.ESCAPE)
+            goToPreviousMenu();
+        return false;
     }
 
     private void stageDispose() {

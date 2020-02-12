@@ -6,6 +6,7 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.mageshowdown.gamelogic.*;
 import com.mageshowdown.packets.Network;
 import com.mageshowdown.packets.Network.CastSpellProjectile;
@@ -21,19 +22,16 @@ import static com.mageshowdown.gameclient.ClientAssetLoader.prefs;
 public class ClientPlayerCharacter extends PlayerCharacter
         implements AnimatedActor, InputProcessor {
 
+    private static Random rndSound = new Random();
     private GameClient myClient = GameClient.getInstance();
-
     private TextureRegion currShieldFrame;
     private TextureRegion currFrozenFrame;
-
     private boolean isMyPlayer;
     private boolean castSpellProjectile = false;
     private boolean castBomb = false;
     private boolean switchOrbs = false;
-
     private String userName;
     private int id;
-    private static Random rndSound = new Random();
 
     public ClientPlayerCharacter(ClientGameStage stage, Vector2 position, Orb.SpellType orbEquipped, String userName, boolean isMyPlayer) {
         super(stage, position, orbEquipped, true);
@@ -120,7 +118,7 @@ public class ClientPlayerCharacter extends PlayerCharacter
     //if keys were pressed this frame here is where we send the corresponding packets
     private void sendInputPackets() {
         //we are only going to send input packets only for every client's own player
-        if(!isMyPlayer)
+        if (!isMyPlayer)
             return;
         MoveKeyDown keyPress = new MoveKeyDown();
 
@@ -134,16 +132,16 @@ public class ClientPlayerCharacter extends PlayerCharacter
         }
 
         /*
-        * the jump conditional is separate from the moving ones since
-        * we want to be able to jump and move at the same time
-        */
+         * the jump conditional is separate from the moving ones since
+         * we want to be able to jump and move at the same time
+         */
         if (jump) {
             keyPress.keycode = Input.Keys.W;
             myClient.sendTCP(keyPress);
         }
         if (castSpellProjectile) {
             castMySpellProjectile();
-        }else if (castBomb) {
+        } else if (castBomb) {
             castMyBomb();
         }
         if (switchOrbs) {
@@ -239,22 +237,39 @@ public class ClientPlayerCharacter extends PlayerCharacter
 
     @Override
     public boolean keyDown(int keycode) {
-        if (keycode == Input.Keys.D) {
-            horizontalState = HorizontalState.GOING_RIGHT;
-            moveRight = true;
-        } else if (keycode == Input.Keys.A) {
-            horizontalState = HorizontalState.GOING_LEFT;
-            moveLeft = true;
+        switch (keycode) {
+            case Input.Keys.D:
+                horizontalState = HorizontalState.GOING_RIGHT;
+                moveRight = true;
+                break;
+            case Input.Keys.A:
+                horizontalState = HorizontalState.GOING_LEFT;
+                moveLeft = true;
+                break;
+            case Input.Keys.W:
+                jump = true;
+                break;
+            case Input.Keys.Q:
+                switchOrbs = true;
+                break;
+            case Input.Keys.ESCAPE:
+                GameScreen.getRootTable().getColor().a = 0;
+                GameScreen.setState(GameScreen.State.GAME_PAUSED);
+                GameScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
+                Gdx.input.setInputProcessor(GameScreen.getEscMenuStage());
+                break;
+            case Input.Keys.TAB:
+                if (GameScreen.getState() == GameScreen.State.GAME_RUNNING) {
+                    GameScreen.setState(GameScreen.State.SCOREBOARD);
+                    GameScreen.addActionToScoreboard(Actions.fadeIn(0.1f));
+                } else if (GameScreen.getState() == GameScreen.State.SCOREBOARD) {
+                    GameScreen.addActionToScoreboard(Actions.sequence(Actions.fadeOut(0.1f)
+                            , Actions.run(() -> GameScreen.setState(GameScreen.State.GAME_RUNNING))));
+                }
+                break;
         }
 
-        if (keycode == Input.Keys.W) {
-            jump = true;
-        }
-        if (keycode == Input.Keys.Q) {
-            switchOrbs = true;
-        }
-
-        return true;
+        return false;
     }
 
     @Override

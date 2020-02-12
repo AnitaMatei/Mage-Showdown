@@ -69,7 +69,7 @@ public class MenuScreen implements Screen {
         //Show method is called when the current screen becomes this
 //        viewport = new FitViewport(1920, 1080);
         viewport = new ScreenViewport();
-//        viewport.setUnitsPerPixel(0.75f);
+        ((ScreenViewport) viewport).setUnitsPerPixel(1f);
         batch = new SpriteBatch();
 
         mainMenuStage = new Stage(viewport, batch);

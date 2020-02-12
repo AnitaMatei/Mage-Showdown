@@ -29,9 +29,9 @@ public class GamePreferences implements Preferences {
     public GamePreferences() throws IOException {
         String prefsPath;
         if (OSDetector.getOSType() == OSDetector.OSType.WINDOWS)
-            prefsPath = FileSystemView.getFileSystemView().getDefaultDirectory().getPath() + "\\My Games\\MageShowdown\\UserPrefs.xml";
+            prefsPath = FileSystemView.getFileSystemView().getDefaultDirectory().getPath() + "\\My Games\\MageShowdown\\conifg.xml";
         else
-            prefsPath = FileSystemView.getFileSystemView().getHomeDirectory().getPath() + "/.MageShowdown/UserPrefs.xml";
+            prefsPath = FileSystemView.getFileSystemView().getHomeDirectory().getPath() + "/.MageShowdown/config.xml";
         this.fileHandle = new FileHandle(prefsPath);
         File file = new File(prefsPath);
         if (file.exists())
@@ -57,6 +57,7 @@ public class GamePreferences implements Preferences {
             defaultValues();
         }
     }
+
 
     @Override
     public Preferences putBoolean(String key, boolean val) {

@@ -14,4 +14,28 @@ public class PrefsKeys {
     public static final String SOUNDVOLUME = "soundVolume";
     public static final String MUSICVOLUME = "musicVolume";
     public static final String SHOWFPS = "showFPS";
+
+    /*USEGL30("useGL30"),
+    WIDTH("width"),
+    HEIGHT("height"),
+    REFRESHRATE("refreshRate"),
+    FULLSCREEN("fullscreen"),
+    VSYNC("vSyncEnabled"),
+    PLAYERNAME("playerName"),
+    FOREGROUNDFPS("foregroundFPS"),
+    BACKGROUNDFPS("backgroundFPS"),
+    LASTENTEREDIP("lastEnteredIp"),
+    SOUNDVOLUME("soundVolume"),
+    MUSICVOLUME("musicVolume"),
+    SHOWFPS("showFPS");
+    private String settingName;
+
+    PrefsKeys(String settingName) {
+        this.settingName = settingName;
+    }
+
+    @Override
+    public String toString() {
+        return settingName;
+    }*/
 }
