@@ -49,12 +49,9 @@ public class GameScreen implements Screen {
         scoreboardStage = new ScoreboardStage(viewport, batch);
         escMenuStage = new Stage(viewport, batch);
         roundEndStage = new RoundEndStage(viewport, batch);
-
         prepareEscMenu();
+        GameScreen.setGameState(GameScreen.GameState.GAME_RUNNING);
 
-        ClientAssetLoader.gameplayMusic.setVolume(prefs.getFloat(PrefsKeys.MUSICVOLUME) * 0.5f);
-        ClientAssetLoader.gameplayMusic.play();
-        ClientAssetLoader.gameplayMusic.setLooping(true);
     }
 
     public static GameScreen getInstance() {
@@ -249,6 +246,9 @@ public class GameScreen implements Screen {
 
     @Override
     public void show() {
+        ClientAssetLoader.gameplayMusic.setVolume(prefs.getFloat(PrefsKeys.MUSICVOLUME) * 0.5f);
+        ClientAssetLoader.gameplayMusic.play();
+        ClientAssetLoader.gameplayMusic.setLooping(true);
     }
 
     @Override
@@ -275,7 +275,7 @@ public class GameScreen implements Screen {
     public void dispose() {
         gameStage.dispose();
         escMenuStage.dispose();
-        //gameOptionsStage.dispose();
+        //optionsStage disposes itself from withing the class
         scoreboardStage.dispose();
         hudStage.dispose();
         roundEndStage.dispose();

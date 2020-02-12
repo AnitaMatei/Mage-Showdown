@@ -160,11 +160,9 @@ public class MenuScreen implements Screen {
             @Override
             public void clicked(InputEvent even, float x, float y) {
                 ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                if (GameWorld.WORLD.getBodyCount() == 0) {
-                    String ipAddress = addressField.getText();
-                    prefs.putString(PrefsKeys.LASTENTEREDIP, ipAddress).flush();
-                    clientStart(ipAddress);
-                }
+                String ipAddress = addressField.getText();
+                prefs.putString(PrefsKeys.LASTENTEREDIP, ipAddress).flush();
+                clientStart(ipAddress);
             }
         });
 
@@ -207,10 +205,14 @@ public class MenuScreen implements Screen {
         try {
             myClient.setUserName(prefs.getString(PrefsKeys.PLAYERNAME));
             myClient.start();
+            //GameScreen stages need to be initialized before connect, including music, else black screen....
+            //Fucking Matei wtf. Like wtf why does music initialized after connect result in black screen!?!?!
+
             GameScreen.start();
-            GameScreen.setGameState(GameScreen.GameState.GAME_RUNNING);
             myClient.connect(5000, ipAddress, Network.TCP_PORT, Network.UDP_PORT);
             MageShowdownClient.getInstance().setScreen(GameScreen.getInstance());
+
+            myClient.addListener(new ClientListener());
 
         } catch (IOException e) {
             ClientAssetLoader.gameplayMusic.stop();
@@ -229,7 +231,6 @@ public class MenuScreen implements Screen {
             dialog.setMovable(false);
             dialog.show(mainMenuStage);
         }
-        myClient.addListener(new ClientListener());
     }
 
     public enum StagePhase {
