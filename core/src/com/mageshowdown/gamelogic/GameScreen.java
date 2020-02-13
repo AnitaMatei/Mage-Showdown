@@ -38,7 +38,6 @@ public class GameScreen implements Screen {
     private static State state;
 
     private GameScreen() {
-
     }
 
     public static void start() {
@@ -54,7 +53,6 @@ public class GameScreen implements Screen {
         ClientAssetLoader.gameplayMusic.setVolume(prefs.getFloat(PrefsKeys.MUSICVOLUME) * 0.5f);
         ClientAssetLoader.gameplayMusic.play();
         ClientAssetLoader.gameplayMusic.setLooping(true);
-
     }
 
     public static GameScreen getInstance() {
@@ -85,27 +83,8 @@ public class GameScreen implements Screen {
         GameScreen.state = state;
     }
 
-    public static ScoreboardStage getScoreboardStage() {
-        return scoreboardStage;
-    }
-
-    public static void setScoreboardStage(ScoreboardStage scoreboardStage) {
-        GameScreen.scoreboardStage = scoreboardStage;
-    }
-
     public static void addActionToScoreboard(Action action) {
         scoreboardStage.addAction(action);
-    }
-
-    private void scoreboardInput() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.TAB) && state == State.SCOREBOARD) {
-            scoreboardStage.addAction(Actions.sequence(Actions.fadeOut(0.1f)
-                    , Actions.run(() -> state = State.GAME_RUNNING)));
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && state == State.SCOREBOARD) {
-            state = State.GAME_PAUSED;
-            Gdx.input.setInputProcessor(escMenuStage);
-        }
     }
 
     @Override
@@ -138,7 +117,6 @@ public class GameScreen implements Screen {
                 gameOptionsStage.draw();
                 break;
             case SCOREBOARD:
-//                scoreboardInput();
                 scoreboardStage.act();
                 scoreboardStage.draw();
                 break;
@@ -348,12 +326,6 @@ public class GameScreen implements Screen {
             nameListWidget.setItems(playerNames);
             killsListWidget.setItems(playerKills);
             scoreListWidget.setItems(playerScore);
-        }
-
-        @Override
-        public boolean keyDown(int keyCode) {
-
-            return false;
         }
     }
 

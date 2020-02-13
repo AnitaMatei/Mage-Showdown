@@ -29,7 +29,7 @@ public class GamePreferences implements Preferences {
     public GamePreferences() throws IOException {
         String prefsPath;
         if (OSDetector.getOSType() == OSDetector.OSType.WINDOWS)
-            prefsPath = FileSystemView.getFileSystemView().getDefaultDirectory().getPath() + "\\My Games\\MageShowdown\\conifg.xml";
+            prefsPath = FileSystemView.getFileSystemView().getDefaultDirectory().getPath() + "\\My Games\\MageShowdown\\config.xml";
         else
             prefsPath = FileSystemView.getFileSystemView().getHomeDirectory().getPath() + "/.MageShowdown/config.xml";
         this.fileHandle = new FileHandle(prefsPath);

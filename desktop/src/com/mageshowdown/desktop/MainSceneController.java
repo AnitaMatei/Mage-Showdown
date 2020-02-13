@@ -33,7 +33,15 @@ public class MainSceneController implements Initializable {
 
     @FXML
     void playBtnClicked(ActionEvent actionEvent) {
+        boolean isFullscreen = prefs.getBoolean(PrefsKeys.FULLSCREEN);
+        int width = prefs.getInteger(PrefsKeys.WIDTH);
+        int height = prefs.getInteger(PrefsKeys.HEIGHT);
+        int rate = prefs.getInteger(PrefsKeys.REFRESHRATE);
+
         LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
+        config.width = width;
+        config.height = height;
+        config.fullscreen = isFullscreen;
         config.resizable = false;
         config.foregroundFPS = prefs.getInteger(PrefsKeys.FOREGROUNDFPS);
         config.backgroundFPS = prefs.getInteger(PrefsKeys.BACKGROUNDFPS);
@@ -50,14 +58,11 @@ public class MainSceneController implements Initializable {
         DesktopClientLauncher.mainStage.close();
 
         /*
-         *After the game is launched, we set the display mode using the runtime graphics class instead of the
-         *configuration, because it lacks refresh rate support
+         *After the game is launched, we set the display mode using the runtime graphics class for the correct refresh
+         * rate, dute to conifguration class' lack of refresh rate field
          */
 
-        int width = prefs.getInteger(PrefsKeys.WIDTH);
-        int height = prefs.getInteger(PrefsKeys.HEIGHT);
-        int rate = prefs.getInteger(PrefsKeys.REFRESHRATE);
-        if (prefs.getBoolean(PrefsKeys.FULLSCREEN))
+        if (isFullscreen)
             for (Graphics.DisplayMode mode : Gdx.graphics.getDisplayModes()) {
                 if (mode.width == width && mode.height == height && mode.refreshRate == rate) {
                     Gdx.graphics.setFullscreenMode(mode);
