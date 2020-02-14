@@ -61,7 +61,6 @@ public class MainSceneController implements Initializable {
          *After the game is launched, we set the display mode using the runtime graphics class for the correct refresh
          * rate, dute to conifguration class' lack of refresh rate field
          */
-
         if (isFullscreen)
             for (Graphics.DisplayMode mode : Gdx.graphics.getDisplayModes()) {
                 if (mode.width == width && mode.height == height && mode.refreshRate == rate) {

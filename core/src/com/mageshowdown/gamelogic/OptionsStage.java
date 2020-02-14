@@ -28,6 +28,7 @@ import static com.mageshowdown.gameclient.ClientAssetLoader.uiSkin;
 
 public class OptionsStage extends Stage {
 
+    private final MageShowdownClient game = MageShowdownClient.getInstance();
     private Image background;
     private Texture backgroundTexture;
     private Table root;
@@ -89,14 +90,9 @@ public class OptionsStage extends Stage {
 
         root = new Table();
         root.setFillParent(true);
-//        root.debug();
         Table contextTable = new Table();
         ScrollPane contScroll = new ScrollPane(contextTable, uiSkin, "transp-scrollpane");
         contScroll.setFadeScrollBars(false);
-
-        //contextTable.debug();
-        Table bottomTable = new Table();
-        //bottomTable.debug();
 
         labels = new Label[7];
         labels[0] = new Label("Options Menu", uiSkin, "menu-label");
@@ -130,7 +126,6 @@ public class OptionsStage extends Stage {
 
         //Here we position the widgets in the context table
         contextTable.defaults().space(20, 25, 20, 25).width(350).height(60);
-        contextTable.add(labels[0]).colspan(2);
         contextTable.row();
         contextTable.add(labels[1], resSelectBox);
         contextTable.row();
@@ -148,11 +143,14 @@ public class OptionsStage extends Stage {
         contextTable.row();
         contextTable.add(testMic, playMic);
 
+        Table bottomTable = new Table();
         //And here we position the back and apply buttons in the bottom table
-        bottomTable.defaults().space(20, 25, 20, 25).width(200).height(60);
+        bottomTable.defaults().space(0, 25, 0, 25).width(200).height(60);
         bottomTable.add(backButton, applyButton);
 
         //Finally, here we position the scrollpane and bottomtable in the root one
+        root.add(labels[0]).pad(20, 0, 20, 0);
+        root.row();
         root.add(contScroll).expand().width(contScroll.getPrefWidth() + 50);
         root.row();
         root.add(bottomTable).bottom().left().pad(20, 20, 20, 20);
@@ -289,7 +287,7 @@ public class OptionsStage extends Stage {
                 } else Gdx.graphics.setWindowedMode(Integer.parseInt(str[0]), Integer.parseInt(str[1]));
 
                 Gdx.graphics.setVSync(vsyncCheckBox.isChecked());
-                MageShowdownClient.getInstance().setCanDrawFont(showFPSCheckBox.isChecked());
+                game.setCanDrawFont(showFPSCheckBox.isChecked());
 
                 //Save settings to the Preferences Map
                 prefs.putInteger(PrefsKeys.WIDTH, Integer.parseInt(str[0]));
@@ -321,13 +319,13 @@ public class OptionsStage extends Stage {
     }
 
     private void goToPreviousMenu() {
-        if (MageShowdownClient.getInstance().getScreen() == MenuScreen.getInstance()) {
+        if (game.getScreen() == MenuScreen.getInstance()) {
             MenuScreen.setStagePhase(MenuScreen.StagePhase.MAIN_MENU_STAGE);
             MenuScreen.getRootTable().getColor().a = 0f;
             MenuScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
             Gdx.input.setInputProcessor(MenuScreen.getMainMenuStage());
         }
-        if (MageShowdownClient.getInstance().getScreen() == GameScreen.getInstance()) {
+        if (game.getScreen() == GameScreen.getInstance()) {
             GameScreen.setState(GameScreen.State.GAME_PAUSED);
             GameScreen.getRootTable().getColor().a = 0f;
             GameScreen.getRootTable().addAction(Actions.fadeIn(0.1f));

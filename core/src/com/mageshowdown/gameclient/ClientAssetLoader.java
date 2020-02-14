@@ -66,11 +66,12 @@ public class ClientAssetLoader {
     public static TiledMap map1;
     public static TiledMap dungeonMap;
     public static TiledMap purpleMap;
-    //credits file
-
-    public AssetManager manager;
+    //credits assets
+    public static Texture libgdxLogo;
+    public static Texture kryonetLogo;
 
     private static ClientAssetLoader ourInstance = new ClientAssetLoader();
+    public AssetManager manager;
 
     private ClientAssetLoader() {
         manager = new AssetManager();
@@ -87,7 +88,7 @@ public class ClientAssetLoader {
 
     public void setLoadingAssets() {
         hudSkin = manager.get("UIAssets/golden-ui-skin.json", Skin.class);
-        bigSizeFont = manager.get("joystixBig.ttf", BitmapFont.class);
+        bigSizeFont = manager.get("retroBig.ttf", BitmapFont.class);
     }
 
     public void load() {
@@ -136,6 +137,8 @@ public class ClientAssetLoader {
 
         manager.load("UIAssets/menuBackground.png", Texture.class);
         manager.load("UIAssets/Black_1080p.png", Texture.class);
+        manager.load("UIAssets/libgdx_logo.png", Texture.class);
+        manager.load("UIAssets/kryonet_logo.png", Texture.class);
 
         manager.load("UIAssets/uiskin.json", Skin.class);
 
@@ -153,7 +156,7 @@ public class ClientAssetLoader {
         FreetypeFontLoader.FreeTypeFontLoaderParameter hugeParameter = new FreetypeFontLoader.FreeTypeFontLoaderParameter();
         hugeParameter.fontFileName = "UIAssets/joystix monospace.ttf";
         hugeParameter.fontParameters.size = 48;
-        manager.load("joystixHuge.ttf", BitmapFont.class, hugeParameter);
+        manager.load("retroHuge.ttf", BitmapFont.class, hugeParameter);
 
         FreetypeFontLoader.FreeTypeFontLoaderParameter bigParameter = new FreetypeFontLoader.FreeTypeFontLoaderParameter();
         bigParameter.fontFileName = "UIAssets/joystix monospace.ttf";
@@ -161,7 +164,7 @@ public class ClientAssetLoader {
         bigParameter.fontParameters.shadowColor = Color.DARK_GRAY;
         bigParameter.fontParameters.shadowOffsetX = 3;
         bigParameter.fontParameters.shadowOffsetY = 3;
-        manager.load("joystixBig.ttf", BitmapFont.class, bigParameter);
+        manager.load("retroBig.ttf", BitmapFont.class, bigParameter);
     }
 
     public void setAssets() {
@@ -205,11 +208,13 @@ public class ClientAssetLoader {
 
         menuBackground = manager.get("UIAssets/menuBackground.png", Texture.class);
         solidBlack = manager.get("UIAssets/Black_1080p.png", Texture.class);
+        libgdxLogo = manager.get("UIAssets/libgdx_logo.png", Texture.class);
+        kryonetLogo = manager.get("UIAssets/kryonet_logo.png", Texture.class);
 
         uiSkin = manager.get("UIAssets/uiskin.json", Skin.class);
 
 
-        hugeSizeFont = manager.get("joystixHuge.ttf", BitmapFont.class);
+        hugeSizeFont = manager.get("retroHuge.ttf", BitmapFont.class);
 
         uiSkin.get("default", TextButton.TextButtonStyle.class).font = bigSizeFont;
         uiSkin.get("default", TextField.TextFieldStyle.class).font = bigSizeFont;
