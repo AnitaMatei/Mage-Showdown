@@ -320,10 +320,10 @@ public class OptionsStage extends Stage {
 
     private void goToPreviousMenu() {
         if (game.getScreen() == MenuScreen.getInstance()) {
-            MenuScreen.setStagePhase(MenuScreen.StagePhase.MAIN_MENU_STAGE);
             MenuScreen.getRootTable().getColor().a = 0f;
             MenuScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
-            Gdx.input.setInputProcessor(MenuScreen.getMainMenuStage());
+            MenuScreen.setCurrentStage(MenuScreen.getMainMenuStage());
+            Gdx.input.setInputProcessor(MenuScreen.getCurrentStage());
         }
         if (game.getScreen() == GameScreen.getInstance()) {
             GameScreen.setState(GameScreen.State.GAME_PAUSED);

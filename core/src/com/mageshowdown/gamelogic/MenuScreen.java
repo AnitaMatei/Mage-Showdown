@@ -38,8 +38,8 @@ public class MenuScreen implements Screen {
     private static Stage mainMenuStage;
     private static OptionsStage menuOptionsStage;
     private static CreditsStage creditsStage;
+    private static Stage currentStage;
     private static Table root;
-    private static StagePhase stagePhase;
     private GameClient myClient = GameClient.getInstance();
 
     public static MenuScreen getInstance() {
@@ -58,8 +58,12 @@ public class MenuScreen implements Screen {
         return batch;
     }
 
-    public static void setStagePhase(StagePhase stagePhase) {
-        MenuScreen.stagePhase = stagePhase;
+    public static Stage getCurrentStage() {
+        return currentStage;
+    }
+
+    public static void setCurrentStage(Stage currentStage) {
+        MenuScreen.currentStage = currentStage;
     }
 
     @Override
@@ -72,8 +76,7 @@ public class MenuScreen implements Screen {
 
         mainMenuStage = new Stage(viewport, batch);
         prepareMainMenuStage();
-        stagePhase = StagePhase.MAIN_MENU_STAGE;
-        Gdx.input.setInputProcessor(mainMenuStage);
+        Gdx.input.setInputProcessor(currentStage = mainMenuStage);
 
         menuMusic.setVolume(prefs.getFloat(PrefsKeys.MUSICVOLUME));
         menuMusic.play();
@@ -87,20 +90,8 @@ public class MenuScreen implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        switch (stagePhase) {
-            case MAIN_MENU_STAGE:
-                mainMenuStage.act();
-                mainMenuStage.draw();
-                break;
-            case OPTIONS_STAGE:
-                menuOptionsStage.act();
-                menuOptionsStage.draw();
-                break;
-            case CREDITS_STAGE:
-                creditsStage.act();
-                creditsStage.draw();
-                break;
-        }
+        currentStage.act();
+        currentStage.draw();
     }
 
     @Override
@@ -158,7 +149,7 @@ public class MenuScreen implements Screen {
                 btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
                 String ipAddress = addressField.getText();
                 prefs.putString(PrefsKeys.LASTENTEREDIP, ipAddress).flush();
-                clientStart(ipAddress);
+                startClient(ipAddress);
             }
         });
 
@@ -170,8 +161,7 @@ public class MenuScreen implements Screen {
                 // Set alpha to 0 and then add fade in effect action
                 menuOptionsStage.getRootTable().getColor().a = 0f;
                 menuOptionsStage.getRootTable().addAction(Actions.fadeIn(0.1f));
-                stagePhase = StagePhase.OPTIONS_STAGE;
-                Gdx.input.setInputProcessor(menuOptionsStage);
+                Gdx.input.setInputProcessor(currentStage = menuOptionsStage);
             }
         });
 
@@ -180,8 +170,7 @@ public class MenuScreen implements Screen {
             public void changed(ChangeEvent event, Actor actor) {
                 btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
                 creditsStage = new CreditsStage(viewport, batch);
-                stagePhase = StagePhase.CREDITS_STAGE;
-                Gdx.input.setInputProcessor(creditsStage);
+                Gdx.input.setInputProcessor(currentStage = creditsStage);
             }
         });
 
@@ -197,7 +186,7 @@ public class MenuScreen implements Screen {
         mainMenuStage.addActor(root);
     }
 
-    private void clientStart(String ipAddress) {
+    private void startClient(String ipAddress) {
         try {
             myClient.setUserName(prefs.getString(PrefsKeys.PLAYERNAME));
             myClient.start();
@@ -223,15 +212,10 @@ public class MenuScreen implements Screen {
                     dialog.hide();
                 }
             });
-            //            dialog.button(backBtn);
             dialog.getButtonTable().add(backBtn).pad(20).width(150).height(60);
             dialog.setMovable(false);
             dialog.show(mainMenuStage);
         }
-    }
-
-    public enum StagePhase {
-        MAIN_MENU_STAGE, OPTIONS_STAGE, CREDITS_STAGE
     }
 
     private static class CreditsStage extends Stage {
@@ -316,8 +300,7 @@ public class MenuScreen implements Screen {
         }
 
         private void returnToMenu() {
-            stagePhase = StagePhase.MAIN_MENU_STAGE;
-            Gdx.input.setInputProcessor(mainMenuStage);
+            Gdx.input.setInputProcessor(currentStage = mainMenuStage);
             this.dispose();
         }
 
