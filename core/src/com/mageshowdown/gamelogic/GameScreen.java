@@ -34,7 +34,6 @@ public class GameScreen implements Screen {
     private static OptionsStage gameOptionsStage;
     private static EscMenuStage escMenuStage;
     private static RoundEndStage roundEndStage;
-    private static Table root;
     private static State state;
 
     private GameScreen() {
@@ -49,10 +48,13 @@ public class GameScreen implements Screen {
         scoreboardStage = new ScoreboardStage(viewport, batch);
         escMenuStage = new EscMenuStage(viewport, batch);
         roundEndStage = new RoundEndStage(viewport, batch);
+        gameOptionsStage = new OptionsStage(viewport, batch, INSTANCE);
+
         state = State.GAME_RUNNING;
-        ClientAssetLoader.gameplayMusic.setVolume(prefs.getFloat(PrefsKeys.MUSICVOLUME) * 0.5f);
-        ClientAssetLoader.gameplayMusic.play();
-        ClientAssetLoader.gameplayMusic.setLooping(true);
+
+        gameplayMusic.setVolume(prefs.getFloat(PrefsKeys.MUSICVOLUME) * 0.5f);
+        gameplayMusic.play();
+        gameplayMusic.setLooping(true);
     }
 
     public static GameScreen getInstance() {
@@ -63,16 +65,12 @@ public class GameScreen implements Screen {
         return gameStage;
     }
 
-    public static Stage getEscMenuStage() {
+    public static EscMenuStage getEscMenuStage() {
         return escMenuStage;
     }
 
     public static Batch getBatch() {
         return batch;
-    }
-
-    public static Table getRootTable() {
-        return root;
     }
 
     public static State getState() {
@@ -125,7 +123,6 @@ public class GameScreen implements Screen {
 
     @Override
     public void show() {
-
     }
 
     @Override
@@ -145,14 +142,14 @@ public class GameScreen implements Screen {
     @Override
     public void hide() {
         this.dispose();
-        ClientAssetLoader.gameplayMusic.stop();
+        gameplayMusic.stop();
     }
 
     @Override
     public void dispose() {
         gameStage.dispose();
         escMenuStage.dispose();
-        //optionsStage disposes itself from withing the class
+        gameOptionsStage.dispose();
         scoreboardStage.dispose();
         hudStage.dispose();
         roundEndStage.dispose();
@@ -163,34 +160,37 @@ public class GameScreen implements Screen {
         GAME_RUNNING, GAME_PAUSED, GAME_OPTIONS, SCOREBOARD
     }
 
-    private static class EscMenuStage extends Stage {
+    public static class EscMenuStage extends Stage {
+        private Table rootTable;
+
         public EscMenuStage(Viewport viewport, Batch batch) {
             super(viewport, batch);
-            Image background = new Image(ClientAssetLoader.menuBackground);
-            background.setFillParent(true);
+
+            Image background = new Image(menuBackground);
             background.setColor(0, 0, 0, 0.8f);
-
-            root = new Table();
-            root.setFillParent(true);
+            this.addActor(background);
+            rootTable = new Table();
+            rootTable.setFillParent(true);
             //root.debug();
+            this.addActor(rootTable);
 
-            TextButton resumeButton = new TextButton("Resume Game", ClientAssetLoader.uiSkin);
-            TextButton optionsButton = new TextButton("Options...", ClientAssetLoader.uiSkin);
-            TextButton quitButton = new TextButton("Quit Game", ClientAssetLoader.uiSkin);
-            TextButton disconnectButton = new TextButton("Disconnect", ClientAssetLoader.uiSkin);
+            TextButton resumeButton = new TextButton("Resume Game", uiSkin);
+            TextButton optionsButton = new TextButton("Options...", uiSkin);
+            TextButton quitButton = new TextButton("Quit Game", uiSkin);
+            TextButton disconnectButton = new TextButton("Disconnect", uiSkin);
 
-            root.defaults().space(20, 25, 20, 25).width(605).height(60).colspan(2);
-            root.add(resumeButton);
-            root.row();
-            root.add(optionsButton);
-            root.row();
-            root.defaults().width(290).colspan(1);
-            root.add(disconnectButton, quitButton);
+            rootTable.defaults().space(20, 25, 20, 25).width(605).height(60).colspan(2);
+            rootTable.add(resumeButton);
+            rootTable.row();
+            rootTable.add(optionsButton);
+            rootTable.row();
+            rootTable.defaults().width(290).colspan(1);
+            rootTable.add(disconnectButton, quitButton);
 
             resumeButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                    btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
 
                     state = State.GAME_RUNNING;
                     Gdx.input.setInputProcessor(gameStage.getPlayerCharacter());
@@ -200,12 +200,9 @@ public class GameScreen implements Screen {
             optionsButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-
-                    gameOptionsStage = new OptionsStage(viewport, batch, ClientAssetLoader.solidBlack);
-                    gameOptionsStage.getRootTable().getColor().a = 0f;
+                    btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                    gameOptionsStage.getRootTable().addAction(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
                     state = State.GAME_OPTIONS;
-                    gameOptionsStage.getRootTable().addAction(Actions.fadeIn(0.1f));
                     Gdx.input.setInputProcessor(gameOptionsStage);
                 }
             });
@@ -213,7 +210,7 @@ public class GameScreen implements Screen {
             disconnectButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                    btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
 
                     GameClient.getInstance().stop();
                     ClientRound.getInstance().stop();
@@ -226,23 +223,23 @@ public class GameScreen implements Screen {
             quitButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                    btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
 
-                    final Dialog dialog = new Dialog("", ClientAssetLoader.uiSkin);
-                    dialog.text("Are you sure?", ClientAssetLoader.uiSkin.get("menu-label", Label.LabelStyle.class));
-                    Button confirmBtn = new TextButton("Yes, quit the Game!", ClientAssetLoader.uiSkin);
-                    Button cancelBtn = new TextButton("No, take me back!", ClientAssetLoader.uiSkin);
+                    final Dialog dialog = new Dialog("", uiSkin);
+                    dialog.text("Are you sure?", uiSkin.get("menu-label", Label.LabelStyle.class));
+                    Button confirmBtn = new TextButton("Yes, quit the Game!", uiSkin);
+                    Button cancelBtn = new TextButton("No, take me back!", uiSkin);
                     confirmBtn.addListener(new ChangeListener() {
                         @Override
                         public void changed(ChangeEvent event, Actor actor) {
-                            ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                            btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
                             Gdx.app.exit();
                         }
                     });
                     cancelBtn.addListener(new ChangeListener() {
                         @Override
                         public void changed(ChangeEvent event, Actor actor) {
-                            ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                            btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
                             dialog.hide();
                         }
                     });
@@ -252,9 +249,10 @@ public class GameScreen implements Screen {
                     dialog.show(escMenuStage);
                 }
             });
+        }
 
-            this.addActor(background);
-            this.addActor(root);
+        public Table getRootTable() {
+            return rootTable;
         }
 
         @Override
@@ -306,7 +304,6 @@ public class GameScreen implements Screen {
             wrapper.width(WIDTH).height(HEIGHT);
 
             this.addActor(wrapper);
-            this.getRoot().getColor().a = 0f;
         }
 
         @Override
@@ -415,7 +412,7 @@ public class GameScreen implements Screen {
 
         private RoundEndStage(Viewport viewport, Batch batch) {
             super(viewport, batch);
-            Image background = new Image(ClientAssetLoader.menuBackground);
+            Image background = new Image(menuBackground);
             background.setFillParent(true);
             background.setColor(0, 0, 0, 0.8f);
 

@@ -253,15 +253,14 @@ public class ClientPlayerCharacter extends PlayerCharacter
                 switchOrbs = true;
                 break;
             case Input.Keys.ESCAPE:
-                GameScreen.getRootTable().getColor().a = 0;
+                GameScreen.getEscMenuStage().getRootTable().addAction(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
                 GameScreen.setState(GameScreen.State.GAME_PAUSED);
-                GameScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
                 Gdx.input.setInputProcessor(GameScreen.getEscMenuStage());
                 break;
             case Input.Keys.TAB:
                 if (GameScreen.getState() == GameScreen.State.GAME_RUNNING) {
+                    GameScreen.addActionToScoreboard(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
                     GameScreen.setState(GameScreen.State.SCOREBOARD);
-                    GameScreen.addActionToScoreboard(Actions.fadeIn(0.1f));
                 } else if (GameScreen.getState() == GameScreen.State.SCOREBOARD) {
                     GameScreen.addActionToScoreboard(Actions.sequence(Actions.fadeOut(0.1f)
                             , Actions.run(() -> GameScreen.setState(GameScreen.State.GAME_RUNNING))));

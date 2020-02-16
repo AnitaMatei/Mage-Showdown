@@ -25,7 +25,6 @@ import com.mageshowdown.utils.PrefsKeys;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.Scanner;
 
 import static com.mageshowdown.gameclient.ClientAssetLoader.*;
@@ -76,13 +75,15 @@ public class MenuScreen implements Screen {
 
         mainMenuStage = new Stage(viewport, batch);
         prepareMainMenuStage();
+        menuOptionsStage = new OptionsStage(viewport, batch, INSTANCE);
+
         Gdx.input.setInputProcessor(currentStage = mainMenuStage);
 
         menuMusic.setVolume(prefs.getFloat(PrefsKeys.MUSICVOLUME));
         menuMusic.play();
 
-        List<InetAddress> addressList;
-        new Thread(() -> /*addressList = */myClient.discoverHosts(Network.UDP_PORT, 5000)).start();
+        /*List<InetAddress> addressList;
+        new Thread(() -> *//*addressList = *//*myClient.discoverHosts(Network.UDP_PORT, 5000)).start();*/
     }
 
     @Override
@@ -117,6 +118,7 @@ public class MenuScreen implements Screen {
     @Override
     public void dispose() {
         mainMenuStage.dispose();
+        menuOptionsStage.dispose();
         batch.dispose();
     }
 
@@ -143,6 +145,9 @@ public class MenuScreen implements Screen {
         root.defaults().width(290).colspan(1);
         root.add(creditsButton, quitButton);
 
+        mainMenuStage.addActor(background);
+        mainMenuStage.addActor(root);
+
         connectButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent even, float x, float y) {
@@ -157,10 +162,8 @@ public class MenuScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                menuOptionsStage = new OptionsStage(viewport, batch, menuBackground);
                 // Set alpha to 0 and then add fade in effect action
-                menuOptionsStage.getRootTable().getColor().a = 0f;
-                menuOptionsStage.getRootTable().addAction(Actions.fadeIn(0.1f));
+                menuOptionsStage.getRootTable().addAction(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
                 Gdx.input.setInputProcessor(currentStage = menuOptionsStage);
             }
         });
@@ -181,9 +184,6 @@ public class MenuScreen implements Screen {
                 Gdx.app.exit();
             }
         });
-
-        mainMenuStage.addActor(background);
-        mainMenuStage.addActor(root);
     }
 
     private void startClient(String ipAddress) {
@@ -259,8 +259,7 @@ public class MenuScreen implements Screen {
 
             };
             scrollAction.setDuration(15);
-            scrollPane.getColor().a = 0f;
-            scrollPane.addAction(Actions.sequence(Actions.fadeIn(duration), scrollAction));
+            scrollPane.addAction(Actions.sequence(Actions.alpha(0), Actions.fadeIn(duration), scrollAction));
         }
 
         private void fillScrolledTable() throws IOException {

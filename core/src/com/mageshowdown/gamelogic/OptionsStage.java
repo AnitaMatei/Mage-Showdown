@@ -3,9 +3,10 @@ package com.mageshowdown.gamelogic;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.AudioDevice;
 import com.badlogic.gdx.audio.AudioRecorder;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -16,22 +17,20 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mageshowdown.gameclient.ClientAssetLoader;
 import com.mageshowdown.gameclient.MageShowdownClient;
 import com.mageshowdown.utils.PrefsKeys;
 
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
-import static com.mageshowdown.gameclient.ClientAssetLoader.prefs;
-import static com.mageshowdown.gameclient.ClientAssetLoader.uiSkin;
+import static com.mageshowdown.gameclient.ClientAssetLoader.*;
 
 public class OptionsStage extends Stage {
 
     private final MageShowdownClient game = MageShowdownClient.getInstance();
-    private Image background;
-    private Texture backgroundTexture;
+    private Screen parentScreen;
     private Table root;
+    private Dialog discDialog;
     private TextField playerNameField;
     private TextButton vsyncCheckBox, showFPSCheckBox,
             backButton, applyButton, testMic, playMic;
@@ -41,6 +40,7 @@ public class OptionsStage extends Stage {
     private Slider soundVolumeSlider;
     private Slider musicVolumeSlider;
     private Label[] labels;
+    private boolean isAnyChange = false;
 
     private Graphics.DisplayMode[] displayModes;
     private AudioRecorder audioRecorder;
@@ -48,46 +48,30 @@ public class OptionsStage extends Stage {
     private int samples = 22100;
     private short[] micData = new short[samples * 5];
 
-    public OptionsStage(Texture backgroundTexture) {
-        super();
-        init(backgroundTexture);
-    }
-
-    public OptionsStage(Viewport viewport, Texture backgroundTexture) {
-        super(viewport);
-        init(backgroundTexture);
-    }
-
-    public OptionsStage(Viewport viewport, Batch batch, Texture backgroundTexture) {
+    public OptionsStage(Viewport viewport, Batch batch, Screen parentScreen) {
         super(viewport, batch);
-        init(backgroundTexture);
+
+        this.parentScreen = parentScreen;
+        Image background = new Image(menuBackground);
+        background.setFillParent(true);
+        if (parentScreen instanceof GameScreen) background.setColor(0, 0, 0, 0.8f);
+
+        displayModes = Gdx.graphics.getDisplayModes();
+
+        setupLayoutView();
+        createDialog();
+        setupWidgetData();
+        handleWidgetEvents();
+
+        this.addActor(background);
+        this.addActor(root);
     }
 
     public Table getRootTable() {
         return root;
     }
 
-    private void init(Texture backgroundTexture) {
-        this.backgroundTexture = backgroundTexture;
-        displayModes = Gdx.graphics.getDisplayModes();
-
-        setupLayoutView();
-        setupWidgetData();
-        handleWidgetEvents();
-
-        this.addActor(background);
-        this.addActor(root);
-        audioDevice = Gdx.audio.newAudioDevice(samples, true);
-        audioRecorder = Gdx.audio.newAudioRecorder(samples, true);
-    }
-
-
     private void setupLayoutView() {
-        background = new Image(backgroundTexture);
-        if (backgroundTexture.equals(ClientAssetLoader.solidBlack))
-            background.setColor(0, 0, 0, 0.8f);
-        background.setFillParent(true);
-
         root = new Table();
         root.setFillParent(true);
         Table contextTable = new Table();
@@ -108,7 +92,7 @@ public class OptionsStage extends Stage {
         refreshSelectBox = new SelectBox<>(uiSkin);
         vsyncCheckBox = new TextButton("", uiSkin);
         showFPSCheckBox = new TextButton("", uiSkin);
-        playerNameField = new TextField(prefs.getString(PrefsKeys.PLAYERNAME), uiSkin);
+        playerNameField = new TextField("", uiSkin);
         playerNameField.setMessageText("Enter your name...");
         soundVolumeSlider = new Slider(0f, 1f, 0.05f, false, uiSkin);
         musicVolumeSlider = new Slider(0f, 1f, 0.05f, false, uiSkin);
@@ -123,6 +107,7 @@ public class OptionsStage extends Stage {
 
         backButton = new TextButton("Back", uiSkin);
         applyButton = new TextButton("Apply", uiSkin);
+        applyButton.setVisible(false);
 
         //Here we position the widgets in the context table
         contextTable.defaults().space(20, 25, 20, 25).width(350).height(60);
@@ -168,41 +153,71 @@ public class OptionsStage extends Stage {
         });
 
         resSelectBox.setItems(resSet.toArray(new String[0]));
-        resSelectBox.setSelected(prefs.getInteger(PrefsKeys.WIDTH) + "x" + prefs.getInteger(PrefsKeys.HEIGHT));
-
         modeSelectBox.setItems("Fullscreen", "Windowed");
-        if (prefs.getBoolean(PrefsKeys.FULLSCREEN))
-            modeSelectBox.setSelected("Fullscreen");
-        else
-            modeSelectBox.setSelected("Windowed");
-
         refreshSelectBox.setItems(refreshSet.toArray(new Integer[0]));
-        refreshSelectBox.setSelected(prefs.getInteger(PrefsKeys.REFRESHRATE));
-
-        if (prefs.getBoolean(PrefsKeys.VSYNC))
-            vsyncCheckBox.setText("VSync: ON");
-        else
-            vsyncCheckBox.setText("VSync: OFF");
-        vsyncCheckBox.setChecked(prefs.getBoolean(PrefsKeys.VSYNC));
-
-        if (prefs.getBoolean(PrefsKeys.SHOWFPS))
-            showFPSCheckBox.setText("Show FPS: ON");
-        else
-            showFPSCheckBox.setText("Show FPS: OFF");
-        showFPSCheckBox.setChecked(prefs.getBoolean(PrefsKeys.SHOWFPS));
 
         soundVolumeSlider.setValue(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
         labels[5].setText("Sound: " + (int) (soundVolumeSlider.getPercent() * 100) + "%");
         musicVolumeSlider.setValue(prefs.getFloat(PrefsKeys.MUSICVOLUME));
         labels[6].setText("Music: " + (int) (musicVolumeSlider.getPercent() * 100) + "%");
+
+        setSelectedFromPrefs();
+    }
+
+    private void setSelectedFromPrefs() {
+        resSelectBox.setSelected(prefs.getInteger(PrefsKeys.WIDTH) + "x" + prefs.getInteger(PrefsKeys.HEIGHT));
+        if (prefs.getBoolean(PrefsKeys.FULLSCREEN))
+            modeSelectBox.setSelected("Fullscreen");
+        else
+            modeSelectBox.setSelected("Windowed");
+        refreshSelectBox.setSelected(prefs.getInteger(PrefsKeys.REFRESHRATE));
+        playerNameField.setText(prefs.getString(PrefsKeys.PLAYERNAME));
+        if (prefs.getBoolean(PrefsKeys.VSYNC))
+            vsyncCheckBox.setText("VSync: ON");
+        else
+            vsyncCheckBox.setText("VSync: OFF");
+        vsyncCheckBox.setChecked(prefs.getBoolean(PrefsKeys.VSYNC));
+        if (prefs.getBoolean(PrefsKeys.SHOWFPS))
+            showFPSCheckBox.setText("Show FPS: ON");
+        else
+            showFPSCheckBox.setText("Show FPS: OFF");
+        showFPSCheckBox.setChecked(prefs.getBoolean(PrefsKeys.SHOWFPS));
     }
 
     private void handleWidgetEvents() {
+        resSelectBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                applyButton.setVisible(isAnyChange = true);
+            }
+        });
+
+        refreshSelectBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                applyButton.setVisible(isAnyChange = true);
+            }
+        });
+
+        modeSelectBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                applyButton.setVisible(isAnyChange = true);
+            }
+        });
+
+        playerNameField.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                applyButton.setVisible(isAnyChange = true);
+            }
+        });
+
         vsyncCheckBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-
+                btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                applyButton.setVisible(isAnyChange = true);
                 if (vsyncCheckBox.isChecked())
                     vsyncCheckBox.setText("VSync: ON");
                 else
@@ -213,7 +228,8 @@ public class OptionsStage extends Stage {
         showFPSCheckBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                applyButton.setVisible(isAnyChange = true);
                 if (showFPSCheckBox.isChecked())
                     showFPSCheckBox.setText("Show FPS: ON");
                 else
@@ -227,7 +243,7 @@ public class OptionsStage extends Stage {
                 super.touchUp(event, x, y, pointer, button);
                 prefs.putFloat(PrefsKeys.SOUNDVOLUME, soundVolumeSlider.getValue());
                 prefs.flush();
-                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
                 labels[5].setText("Sound: " + (int) (soundVolumeSlider.getPercent() * 100) + "%");
             }
 
@@ -244,8 +260,8 @@ public class OptionsStage extends Stage {
                 super.touchUp(event, x, y, pointer, button);
                 prefs.putFloat(PrefsKeys.MUSICVOLUME, musicVolumeSlider.getValue());
                 prefs.flush();
-                ClientAssetLoader.gameplayMusic.setVolume(prefs.getFloat(PrefsKeys.MUSICVOLUME) * 0.5f);
-                ClientAssetLoader.menuMusic.setVolume(prefs.getFloat(PrefsKeys.MUSICVOLUME));
+                gameplayMusic.setVolume(prefs.getFloat(PrefsKeys.MUSICVOLUME) * 0.5f);
+                menuMusic.setVolume(prefs.getFloat(PrefsKeys.MUSICVOLUME));
                 labels[6].setText("Music: " + (int) (musicVolumeSlider.getPercent() * 100) + "%");
             }
 
@@ -259,6 +275,7 @@ public class OptionsStage extends Stage {
         testMic.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                if (audioRecorder == null) audioRecorder = Gdx.audio.newAudioRecorder(samples, true);
                 audioRecorder.read(micData, 0, micData.length);
             }
         });
@@ -266,6 +283,7 @@ public class OptionsStage extends Stage {
         playMic.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                if (audioDevice == null) audioDevice = Gdx.audio.newAudioDevice(samples, true);
                 new Thread(() -> audioDevice.writeSamples(micData, 0, micData.length)).start();
             }
         });
@@ -274,7 +292,7 @@ public class OptionsStage extends Stage {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 //Apply new settings
-                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
 
                 String[] str = resSelectBox.getSelected().split("x");
                 if (modeSelectBox.getSelected().equals("Fullscreen")) {
@@ -303,6 +321,7 @@ public class OptionsStage extends Stage {
 
                 //Write changes to disk
                 prefs.flush();
+                applyButton.setVisible(isAnyChange = false);
 
                 //when we apply new graphics settings the resolution may have changed so we update the resolution scale
                 GameWorld.updateResolutionScale();
@@ -312,38 +331,71 @@ public class OptionsStage extends Stage {
         backButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                ClientAssetLoader.btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                goToPreviousMenu();
+                btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                handleExit();
             }
         });
     }
 
-    private void goToPreviousMenu() {
-        if (game.getScreen() == MenuScreen.getInstance()) {
-            MenuScreen.getRootTable().getColor().a = 0f;
-            MenuScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
+    private void createDialog() {
+        discDialog = new Dialog("", uiSkin);
+        discDialog.text("Changes not applied", new Label.LabelStyle(hugeSizeFont, Color.WHITE));
+        Button discardBtn = new TextButton("Discard", uiSkin);
+        Button cancelBtn = new TextButton("Cancel", uiSkin);
+        discardBtn.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                setSelectedFromPrefs();
+                discDialog.hide(null);
+                applyButton.setVisible(isAnyChange = false);
+                goBack();
+            }
+        });
+        cancelBtn.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                discDialog.hide(null);
+            }
+        });
+        discDialog.getButtonTable().defaults().space(0, 40, 0, 40).width(150).height(60);
+        discDialog.getButtonTable().add(discardBtn, cancelBtn);
+        discDialog.setMovable(false);
+
+    }
+
+    private void handleExit() {
+        // If there is any change, ask the user to reset settings, or to cancel and apply
+        if (isAnyChange) {
+            discDialog.show(this, null);
+            discDialog.setPosition(Math.round((this.getWidth() - discDialog.getWidth()) / 2),
+                    Math.round((this.getHeight() - discDialog.getHeight()) / 2));
+        } else goBack();
+    }
+
+    private void goBack() {
+        // We dispose of mic test stuff when we exit options, so it doesnt crash when we go in a game
+        if (audioDevice != null) audioDevice.dispose();
+        if (audioRecorder != null) audioRecorder.dispose();
+        if (parentScreen instanceof MenuScreen) {
+            MenuScreen.getRootTable().addAction(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
             MenuScreen.setCurrentStage(MenuScreen.getMainMenuStage());
             Gdx.input.setInputProcessor(MenuScreen.getCurrentStage());
-        }
-        if (game.getScreen() == GameScreen.getInstance()) {
+        } else if (parentScreen instanceof GameScreen) {
             GameScreen.setState(GameScreen.State.GAME_PAUSED);
-            GameScreen.getRootTable().getColor().a = 0f;
-            GameScreen.getRootTable().addAction(Actions.fadeIn(0.1f));
+            GameScreen.getEscMenuStage().getRootTable().addAction(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
             Gdx.input.setInputProcessor(GameScreen.getEscMenuStage());
         }
-        stageDispose();
     }
 
     @Override
     public boolean keyDown(int keyCode) {
-        if (keyCode == Input.Keys.ESCAPE)
-            goToPreviousMenu();
-        return false;
-    }
-
-    private void stageDispose() {
-        audioDevice.dispose();
-        audioRecorder.dispose();
-        this.dispose();
+        if (this.getKeyboardFocus() != null && this.getKeyboardFocus() == discDialog) {
+            discDialog.hide(null);
+            this.setKeyboardFocus(null);
+        } else if (keyCode == Input.Keys.ESCAPE)
+            handleExit();
+        return super.keyDown(keyCode);
     }
 }
