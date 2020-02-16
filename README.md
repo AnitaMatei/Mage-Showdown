@@ -12,11 +12,11 @@ The project was created with the help of https://github.com/HalalaiMircea.
 
 ## Gameplay Examples
 
-![Dungeon](https://github.com/AnitaMatei/Mage-Showdown/blob/master/dungeon%20map%20demo.gif)
+![Dungeon](https://github.com/AnitaMatei/Mage-Showdown/blob/master/gifs/dungeon%20map%20demo.gif)
 
-![Fantasy](https://github.com/AnitaMatei/Mage-Showdown/blob/master/fantasy%20map%20demo.gif)
+![Fantasy](https://github.com/AnitaMatei/Mage-Showdown/blob/master/gifs/fantasy%20map%20demo.gif)
 
-![Menu](https://github.com/AnitaMatei/Mage-Showdown/blob/master/menu%20demo.gif)
+![Menu](https://github.com/AnitaMatei/Mage-Showdown/blob/master/gifs/menu%20demo.gif)
 
 ## Credits
 
