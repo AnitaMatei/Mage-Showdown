@@ -28,7 +28,7 @@ import static com.mageshowdown.gameclient.ClientAssetLoader.*;
 public class OptionsStage extends Stage {
 
     private final MageShowdownClient game = MageShowdownClient.getInstance();
-    private Screen parentScreen;
+    private final Screen parentScreen;
     private Table root;
     private Dialog discDialog;
     private TextField playerNameField;
@@ -42,11 +42,11 @@ public class OptionsStage extends Stage {
     private Label[] labels;
     private boolean isAnyChange = false;
 
-    private Graphics.DisplayMode[] displayModes;
+    private final Graphics.DisplayMode[] displayModes;
     private AudioRecorder audioRecorder;
     private AudioDevice audioDevice;
-    private int samples = 22100;
-    private short[] micData = new short[samples * 5];
+    private final int samples = 22100;
+    private final short[] micData = new short[samples * 5];
 
     public OptionsStage(Viewport viewport, Batch batch, Screen parentScreen) {
         super(viewport, batch);
@@ -75,7 +75,7 @@ public class OptionsStage extends Stage {
         root = new Table();
         root.setFillParent(true);
         Table contextTable = new Table();
-        ScrollPane contScroll = new ScrollPane(contextTable, uiSkin, "transp-scrollpane");
+        ScrollPane contScroll = new ScrollPane(contextTable, uiSkin, "transparent");
         contScroll.setFadeScrollBars(false);
 
         labels = new Label[7];

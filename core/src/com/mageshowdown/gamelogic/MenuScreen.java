@@ -227,7 +227,7 @@ public class MenuScreen implements Screen {
             super(viewport, batch);
             scrolledTable = new Table();
 
-            ScrollPane scrollPane = new ScrollPane(scrolledTable, uiSkin, "transp-scrollpane");
+            ScrollPane scrollPane = new ScrollPane(scrolledTable, uiSkin, "transparent");
             scrollPane.setFillParent(true);
             scrollPane.clearListeners();
             scrollPane.setSmoothScrolling(true);

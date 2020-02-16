@@ -18,7 +18,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 
 public class ClientAssetLoader {
 
-    public static Texture solidBlack;
     public static Skin uiSkin;
     public static Skin hudSkin;
     public static Texture menuBackground;
@@ -136,7 +135,6 @@ public class ClientAssetLoader {
         manager.load("Music/Night Pulse.mp3", Music.class);
 
         manager.load("UIAssets/menuBackground.png", Texture.class);
-        manager.load("UIAssets/Black_1080p.png", Texture.class);
         manager.load("UIAssets/libgdx_logo.png", Texture.class);
         manager.load("UIAssets/kryonet_logo.png", Texture.class);
 
@@ -207,25 +205,17 @@ public class ClientAssetLoader {
         gameplayMusic = manager.get("Music/Night Pulse.mp3", Music.class);
 
         menuBackground = manager.get("UIAssets/menuBackground.png", Texture.class);
-        solidBlack = manager.get("UIAssets/Black_1080p.png", Texture.class);
         libgdxLogo = manager.get("UIAssets/libgdx_logo.png", Texture.class);
         kryonetLogo = manager.get("UIAssets/kryonet_logo.png", Texture.class);
 
-        uiSkin = manager.get("UIAssets/uiskin.json", Skin.class);
-
-
         hugeSizeFont = manager.get("retroHuge.ttf", BitmapFont.class);
 
+        uiSkin = manager.get("UIAssets/uiskin.json", Skin.class);
         uiSkin.get("default", TextButton.TextButtonStyle.class).font = bigSizeFont;
         uiSkin.get("default", TextField.TextFieldStyle.class).font = bigSizeFont;
         uiSkin.get("default", SelectBox.SelectBoxStyle.class).font =
                 uiSkin.get("default", SelectBox.SelectBoxStyle.class).listStyle.font = bigSizeFont;
         uiSkin.add("menu-label", new Label.LabelStyle(bigSizeFont, Color.WHITE), Label.LabelStyle.class);
-
-        ScrollPane.ScrollPaneStyle transpSpStyle =
-                new ScrollPane.ScrollPaneStyle(uiSkin.get("default", ScrollPane.ScrollPaneStyle.class));
-        transpSpStyle.background = null;
-        uiSkin.add("transp-scrollpane", transpSpStyle);
 
         map1 = manager.get("Maps/level1.tmx", TiledMap.class);
         dungeonMap = manager.get("Maps/level2.tmx", TiledMap.class);
