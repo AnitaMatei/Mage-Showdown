@@ -6,7 +6,6 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.AudioDevice;
 import com.badlogic.gdx.audio.AudioRecorder;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -29,24 +28,22 @@ public class OptionsStage extends Stage {
 
     private final MageShowdownClient game = MageShowdownClient.getInstance();
     private final Screen parentScreen;
+    private final Graphics.DisplayMode[] displayModes;
+    private final int samples = 22100;
+    private final short[] micData = new short[samples * 5];
     private Table root;
-    private Dialog discDialog;
+    private MenuDialog discDialog;
     private TextField playerNameField;
     private TextButton vsyncCheckBox, showFPSCheckBox,
             backButton, applyButton, testMic, playMic;
-    private SelectBox<String> resSelectBox;
-    private SelectBox<String> modeSelectBox;
+    private SelectBox<String> resSelectBox, modeSelectBox;
     private SelectBox<Integer> refreshSelectBox;
     private Slider soundVolumeSlider;
     private Slider musicVolumeSlider;
     private Label[] labels;
     private boolean isAnyChange = false;
-
-    private final Graphics.DisplayMode[] displayModes;
     private AudioRecorder audioRecorder;
     private AudioDevice audioDevice;
-    private final int samples = 22100;
-    private final short[] micData = new short[samples * 5];
 
     public OptionsStage(Viewport viewport, Batch batch, Screen parentScreen) {
         super(viewport, batch);
@@ -185,27 +182,30 @@ public class OptionsStage extends Stage {
     }
 
     private void handleWidgetEvents() {
-        resSelectBox.addListener(new ChangeListener() {
+        // ChangeListener catches events including progtamatic ones, not only inputs from mouse
+        // ClickListener is more precise
+        resSelectBox.getList().addListener(new ClickListener() {
             @Override
-            public void changed(ChangeEvent event, Actor actor) {
+            public void clicked(InputEvent event, float x, float y) {
                 applyButton.setVisible(isAnyChange = true);
             }
         });
 
-        refreshSelectBox.addListener(new ChangeListener() {
+        refreshSelectBox.getList().addListener(new ClickListener() {
             @Override
-            public void changed(ChangeEvent event, Actor actor) {
+            public void clicked(InputEvent event, float x, float y) {
                 applyButton.setVisible(isAnyChange = true);
             }
         });
 
-        modeSelectBox.addListener(new ChangeListener() {
+        modeSelectBox.getList().addListener(new ClickListener() {
             @Override
-            public void changed(ChangeEvent event, Actor actor) {
+            public void clicked(InputEvent event, float x, float y) {
                 applyButton.setVisible(isAnyChange = true);
             }
         });
 
+        playerNameField.setProgrammaticChangeEvents(false);
         playerNameField.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -213,9 +213,9 @@ public class OptionsStage extends Stage {
             }
         });
 
-        vsyncCheckBox.addListener(new ChangeListener() {
+        vsyncCheckBox.addListener(new ClickListener() {
             @Override
-            public void changed(ChangeEvent event, Actor actor) {
+            public void clicked(InputEvent event, float x, float y) {
                 btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
                 applyButton.setVisible(isAnyChange = true);
                 if (vsyncCheckBox.isChecked())
@@ -225,9 +225,9 @@ public class OptionsStage extends Stage {
             }
         });
 
-        showFPSCheckBox.addListener(new ChangeListener() {
+        showFPSCheckBox.addListener(new ClickListener() {
             @Override
-            public void changed(ChangeEvent event, Actor actor) {
+            public void clicked(InputEvent event, float x, float y) {
                 btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
                 applyButton.setVisible(isAnyChange = true);
                 if (showFPSCheckBox.isChecked())
@@ -318,13 +318,12 @@ public class OptionsStage extends Stage {
                 prefs.putString(PrefsKeys.PLAYERNAME, playerNameField.getText());
                 prefs.putBoolean(PrefsKeys.VSYNC, vsyncCheckBox.isChecked());
                 prefs.putBoolean(PrefsKeys.SHOWFPS, showFPSCheckBox.isChecked());
-
                 //Write changes to disk
                 prefs.flush();
-                applyButton.setVisible(isAnyChange = false);
 
                 //when we apply new graphics settings the resolution may have changed so we update the resolution scale
                 GameWorld.updateResolutionScale();
+                applyButton.setVisible(isAnyChange = false);
             }
         });
 
@@ -338,43 +337,24 @@ public class OptionsStage extends Stage {
     }
 
     private void createDialog() {
-        discDialog = new Dialog("", uiSkin);
-        discDialog.text("Changes not applied", new Label.LabelStyle(hugeSizeFont, Color.WHITE));
-        Button discardBtn = new TextButton("Discard", uiSkin);
-        Button cancelBtn = new TextButton("Cancel", uiSkin);
-        discardBtn.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                setSelectedFromPrefs();
-                discDialog.hide(null);
-                applyButton.setVisible(isAnyChange = false);
-                goBack();
-            }
-        });
-        cancelBtn.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                discDialog.hide(null);
-            }
-        });
-        discDialog.getButtonTable().defaults().space(0, 40, 0, 40).width(150).height(60);
-        discDialog.getButtonTable().add(discardBtn, cancelBtn);
-        discDialog.setMovable(false);
-
+        discDialog = new MenuDialog("Changes not applied", "Your changes have not been applied. Discard changes?",
+                uiSkin, "dialog");
+        /*Button discardBtn = new TextButton(, uiSkin);
+        Button cancelBtn = new TextButton(, uiSkin);*/
+        discDialog.button("Discard", (Runnable) () -> {
+            applyButton.setVisible(isAnyChange = false);
+            setSelectedFromPrefs();
+            changeToPrevMenu();
+        }).button("Cancel");
     }
 
     private void handleExit() {
         // If there is any change, ask the user to reset settings, or to cancel and apply
-        if (isAnyChange) {
-            discDialog.show(this, null);
-            discDialog.setPosition(Math.round((this.getWidth() - discDialog.getWidth()) / 2),
-                    Math.round((this.getHeight() - discDialog.getHeight()) / 2));
-        } else goBack();
+        if (isAnyChange) discDialog.show(this, Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
+        else changeToPrevMenu();
     }
 
-    private void goBack() {
+    private void changeToPrevMenu() {
         // We dispose of mic test stuff when we exit options, so it doesnt crash when we go in a game
         if (audioDevice != null) audioDevice.dispose();
         if (audioRecorder != null) audioRecorder.dispose();
@@ -392,7 +372,7 @@ public class OptionsStage extends Stage {
     @Override
     public boolean keyDown(int keyCode) {
         if (this.getKeyboardFocus() != null && this.getKeyboardFocus() == discDialog) {
-            discDialog.hide(null);
+            discDialog.hide();
             this.setKeyboardFocus(null);
         } else if (keyCode == Input.Keys.ESCAPE)
             handleExit();

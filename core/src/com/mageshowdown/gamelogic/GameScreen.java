@@ -8,12 +8,10 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
@@ -26,9 +24,9 @@ import static com.mageshowdown.gameclient.ClientAssetLoader.*;
 
 public class GameScreen implements Screen {
     private static final GameScreen INSTANCE = new GameScreen();
-    private static ScoreboardStage scoreboardStage;
     private static Viewport viewport;
     private static Batch batch;
+    private static ScoreboardStage scoreboardStage;
     private static ClientGameStage gameStage;
     private static GameHUDStage hudStage;
     private static OptionsStage gameOptionsStage;
@@ -162,10 +160,9 @@ public class GameScreen implements Screen {
 
     public static class EscMenuStage extends Stage {
         private Table rootTable;
+        private MenuDialog dialog;
 
-        public EscMenuStage(Viewport viewport, Batch batch) {
-            super(viewport, batch);
-
+        {
             Image background = new Image(menuBackground);
             background.setColor(0, 0, 0, 0.8f);
             this.addActor(background);
@@ -187,19 +184,18 @@ public class GameScreen implements Screen {
             rootTable.defaults().width(290).colspan(1);
             rootTable.add(disconnectButton, quitButton);
 
-            resumeButton.addListener(new ClickListener() {
+            resumeButton.addListener(new ChangeListener() {
                 @Override
-                public void clicked(InputEvent event, float x, float y) {
+                public void changed(ChangeEvent event, Actor actor) {
                     btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-
                     state = State.GAME_RUNNING;
                     Gdx.input.setInputProcessor(gameStage.getPlayerCharacter());
                 }
             });
 
-            optionsButton.addListener(new ClickListener() {
+            optionsButton.addListener(new ChangeListener() {
                 @Override
-                public void clicked(InputEvent event, float x, float y) {
+                public void changed(ChangeEvent event, Actor actor) {
                     btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
                     gameOptionsStage.getRootTable().addAction(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
                     state = State.GAME_OPTIONS;
@@ -207,48 +203,34 @@ public class GameScreen implements Screen {
                 }
             });
 
-            disconnectButton.addListener(new ClickListener() {
+            disconnectButton.addListener(new ChangeListener() {
                 @Override
-                public void clicked(InputEvent event, float x, float y) {
+                public void changed(ChangeEvent event, Actor actor) {
                     btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-
                     GameClient.getInstance().stop();
                     ClientRound.getInstance().stop();
-
                     MageShowdownClient.getInstance().setScreen(MenuScreen.getInstance());
                     Gdx.input.setInputProcessor(MenuScreen.getMainMenuStage());
+
                 }
             });
 
-            quitButton.addListener(new ClickListener() {
+            quitButton.addListener(new ChangeListener() {
                 @Override
-                public void clicked(InputEvent event, float x, float y) {
+                public void changed(ChangeEvent event, Actor actor) {
                     btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
 
-                    final Dialog dialog = new Dialog("", uiSkin);
-                    dialog.text("Are you sure?", uiSkin.get("menu-label", Label.LabelStyle.class));
-                    Button confirmBtn = new TextButton("Yes, quit the Game!", uiSkin);
-                    Button cancelBtn = new TextButton("No, take me back!", uiSkin);
-                    confirmBtn.addListener(new ChangeListener() {
-                        @Override
-                        public void changed(ChangeEvent event, Actor actor) {
-                            btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                            Gdx.app.exit();
-                        }
-                    });
-                    cancelBtn.addListener(new ChangeListener() {
-                        @Override
-                        public void changed(ChangeEvent event, Actor actor) {
-                            btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                            dialog.hide();
-                        }
-                    });
-                    dialog.button(confirmBtn);
-                    dialog.button(cancelBtn);
-                    dialog.setMovable(false);
+                    dialog = new MenuDialog("Exit to desktop", "Exiting to desktop. Are you sure?",
+                            uiSkin, "dialog");
+                    dialog.button("Yes", (Runnable) () -> Gdx.app.exit());
+                    dialog.button("Cancel");
                     dialog.show(escMenuStage);
                 }
             });
+        }
+
+        public EscMenuStage(Viewport viewport, Batch batch) {
+            super(viewport, batch);
         }
 
         public Table getRootTable() {
@@ -257,11 +239,14 @@ public class GameScreen implements Screen {
 
         @Override
         public boolean keyDown(int keyCode) {
-            if (keyCode == Input.Keys.ESCAPE) {
+            if (this.getKeyboardFocus() != null && this.getKeyboardFocus() == dialog) {
+                dialog.hide();
+                this.setKeyboardFocus(null);
+            } else if (keyCode == Input.Keys.ESCAPE) {
                 state = State.GAME_RUNNING;
                 Gdx.input.setInputProcessor(gameStage.getPlayerCharacter());
             }
-            return false;
+            return super.keyDown(keyCode);
         }
     }
 
@@ -275,12 +260,7 @@ public class GameScreen implements Screen {
         private List<Integer> killsListWidget = new List<>(uiSkin);
         private List<Integer> scoreListWidget = new List<>(uiSkin);
 
-        private ScoreboardStage(Viewport viewport, Batch batch) {
-            super(viewport, batch);
-            init();
-        }
-
-        private void init() {
+        {
             Table root = new Table(uiSkin);
             root.setBackground("default-window");
             root.setColor(0, 0, 0, 0.8f);
@@ -304,6 +284,10 @@ public class GameScreen implements Screen {
             wrapper.width(WIDTH).height(HEIGHT);
 
             this.addActor(wrapper);
+        }
+
+        public ScoreboardStage(Viewport viewport, Batch batch) {
+            super(viewport, batch);
         }
 
         @Override
@@ -337,12 +321,7 @@ public class GameScreen implements Screen {
         private float maxCapacity;
         private float currCapacity;
 
-        private GameHUDStage(Viewport viewport, Batch batch) {
-            super(viewport, batch);
-            init();
-        }
-
-        private void init() {
+        {
             Table root = new Table();
             root.setFillParent(true);
             //root.debug();
@@ -388,6 +367,10 @@ public class GameScreen implements Screen {
             this.addActor(root);
         }
 
+        private GameHUDStage(Viewport viewport, Batch batch) {
+            super(viewport, batch);
+        }
+
         @Override
         public void act() {
             super.act();
@@ -410,8 +393,7 @@ public class GameScreen implements Screen {
     private static class RoundEndStage extends Stage {
         private Label roundEndLabel;
 
-        private RoundEndStage(Viewport viewport, Batch batch) {
-            super(viewport, batch);
+        {
             Image background = new Image(menuBackground);
             background.setFillParent(true);
             background.setColor(0, 0, 0, 0.8f);
@@ -422,6 +404,10 @@ public class GameScreen implements Screen {
 
             this.addActor(background);
             this.addActor(wrapper);
+        }
+
+        public RoundEndStage(Viewport viewport, Batch batch) {
+            super(viewport, batch);
         }
 
         @Override

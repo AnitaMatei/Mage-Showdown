@@ -198,22 +198,12 @@ public class MenuScreen implements Screen {
             MageShowdownClient.getInstance().setScreen(GameScreen.getInstance());
 
             myClient.addListener(new ClientListener());
-
         } catch (IOException e) {
             gameplayMusic.stop();
 
-            final Dialog dialog = new Dialog("", uiSkin);
-            dialog.text(new Label(e.toString(), uiSkin, "menu-label"));
-            Button backBtn = new TextButton("Back", uiSkin);
-            backBtn.addListener(new ChangeListener() {
-                @Override
-                public void changed(ChangeEvent event, Actor actor) {
-                    btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                    dialog.hide();
-                }
-            });
-            dialog.getButtonTable().add(backBtn).pad(20).width(150).height(60);
-            dialog.setMovable(false);
+            MenuDialog dialog = new MenuDialog("Connection Error", e.toString(), uiSkin, "dialog");
+            dialog.button("Back");
+            dialog.key(Input.Keys.ESCAPE, null);
             dialog.show(mainMenuStage);
         }
     }
@@ -223,8 +213,7 @@ public class MenuScreen implements Screen {
         private boolean isFirstLine, isNearEnd;
         private Table scrolledTable;
 
-        public CreditsStage(Viewport viewport, Batch batch) {
-            super(viewport, batch);
+        {
             scrolledTable = new Table();
 
             ScrollPane scrollPane = new ScrollPane(scrolledTable, uiSkin, "transparent");
@@ -260,6 +249,10 @@ public class MenuScreen implements Screen {
             };
             scrollAction.setDuration(15);
             scrollPane.addAction(Actions.sequence(Actions.alpha(0), Actions.fadeIn(duration), scrollAction));
+        }
+
+        public CreditsStage(Viewport viewport, Batch batch) {
+            super(viewport, batch);
         }
 
         private void fillScrolledTable() throws IOException {
