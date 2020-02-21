@@ -1,4 +1,4 @@
-package com.mageshowdown.gamelogic;
+package com.mageshowdown.gameclient;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -17,9 +17,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mageshowdown.gameclient.ClientListener;
-import com.mageshowdown.gameclient.GameClient;
-import com.mageshowdown.gameclient.MageShowdownClient;
 import com.mageshowdown.packets.Network;
 import com.mageshowdown.utils.PrefsKeys;
 

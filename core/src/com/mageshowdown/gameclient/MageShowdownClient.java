@@ -5,10 +5,7 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.mageshowdown.gamelogic.GameScreen;
 import com.mageshowdown.gamelogic.GameWorld;
-import com.mageshowdown.gamelogic.LoadingScreen;
-import com.mageshowdown.gamelogic.MenuScreen;
 import com.mageshowdown.utils.PrefsKeys;
 
 import static com.mageshowdown.gameclient.ClientAssetLoader.bigSizeFont;

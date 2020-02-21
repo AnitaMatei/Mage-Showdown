@@ -1,4 +1,4 @@
-package com.mageshowdown.gamelogic;
+package com.mageshowdown.gameclient;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -17,7 +17,9 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mageshowdown.gameclient.*;
+import com.esotericsoftware.kryonet.Client;
+import com.mageshowdown.gamelogic.PlayerCharacter;
+import com.mageshowdown.gamelogic.Round;
 import com.mageshowdown.utils.PrefsKeys;
 
 import static com.mageshowdown.gameclient.ClientAssetLoader.*;
@@ -26,7 +28,7 @@ public class GameScreen implements Screen {
     private static final GameScreen INSTANCE = new GameScreen();
     private static Viewport viewport;
     private static Batch batch;
-    private static ScoreboardStage scoreboardStage;
+    private static Scoreboard scoreboard;
     private static ClientGameStage gameStage;
     private static GameHUDStage hudStage;
     private static OptionsStage gameOptionsStage;
@@ -43,16 +45,24 @@ public class GameScreen implements Screen {
 
         gameStage = new ClientGameStage();
         hudStage = new GameHUDStage(viewport, batch);
-        scoreboardStage = new ScoreboardStage(viewport, batch);
         escMenuStage = new EscMenuStage(viewport, batch);
         roundEndStage = new RoundEndStage(viewport, batch);
         gameOptionsStage = new OptionsStage(viewport, batch, INSTANCE);
+        scoreboard = new Scoreboard();
 
         state = State.GAME_RUNNING;
 
         gameplayMusic.setVolume(prefs.getFloat(PrefsKeys.MUSICVOLUME) * 0.5f);
         gameplayMusic.play();
         gameplayMusic.setLooping(true);
+    }
+
+    public static GameHUDStage getHudStage() {
+        return hudStage;
+    }
+
+    public static Scoreboard getScoreboard() {
+        return scoreboard;
     }
 
     public static GameScreen getInstance() {
@@ -80,7 +90,7 @@ public class GameScreen implements Screen {
     }
 
     public static void addActionToScoreboard(Action action) {
-        scoreboardStage.addAction(action);
+        scoreboard.addAction(action);
     }
 
     @Override
@@ -111,10 +121,6 @@ public class GameScreen implements Screen {
             case GAME_OPTIONS:
                 gameOptionsStage.act();
                 gameOptionsStage.draw();
-                break;
-            case SCOREBOARD:
-                scoreboardStage.act();
-                scoreboardStage.draw();
                 break;
         }
     }
@@ -148,14 +154,13 @@ public class GameScreen implements Screen {
         gameStage.dispose();
         escMenuStage.dispose();
         gameOptionsStage.dispose();
-        scoreboardStage.dispose();
         hudStage.dispose();
         roundEndStage.dispose();
         batch.dispose();
     }
 
     public enum State {
-        GAME_RUNNING, GAME_PAUSED, GAME_OPTIONS, SCOREBOARD
+        GAME_RUNNING, GAME_PAUSED, GAME_OPTIONS
     }
 
     public static class EscMenuStage extends Stage {
@@ -222,8 +227,7 @@ public class GameScreen implements Screen {
 
                     dialog = new MenuDialog("Exit to desktop", "Exiting to desktop. Are you sure?",
                             uiSkin, "dialog");
-                    dialog.button("Yes", (Runnable) () -> Gdx.app.exit());
-                    dialog.button("Cancel");
+                    dialog.button("Yes", (Runnable) () -> Gdx.app.exit()).button("Cancel");
                     dialog.show(escMenuStage);
                 }
             });
@@ -250,7 +254,7 @@ public class GameScreen implements Screen {
         }
     }
 
-    private static class ScoreboardStage extends Stage {
+    private static class Scoreboard extends Container<Table> {
         private Array<ClientPlayerCharacter> sortedPlayers = gameStage.getSortedPlayers();
         private Label timeLeftLabel;
         private Array<String> playerNames = new Array<>();
@@ -261,40 +265,35 @@ public class GameScreen implements Screen {
         private List<Integer> scoreListWidget = new List<>(uiSkin);
 
         {
-            Table root = new Table(uiSkin);
-            root.setBackground("default-window");
-            root.setColor(0, 0, 0, 0.8f);
-            //root.debug();
+            Table table = getActor();
+            table.setBackground("default-window");
+            table.setColor(0, 0, 0, 0.8f);
+            //table.debug();
 
             timeLeftLabel = new Label("", uiSkin, "menu-label");
-            root.top();
-            root.add(new Label("TIME LEFT", uiSkin, "menu-label")).expandX().colspan(3);
-            root.row();
-            root.add(timeLeftLabel).expandX().colspan(3);
-            root.row();
-            root.defaults().pad(1, 1, 1, 1).center().fill();
-            root.add(new Label("Player Name", uiSkin), new Label("Kills", uiSkin), new Label("Score", uiSkin));
-            root.row();
-            root.add(nameListWidget, killsListWidget, scoreListWidget);
+            table.top();
+            table.add(new Label("Time Left", uiSkin, "menu-label")).expandX().colspan(3);
+            table.row();
+            table.add(timeLeftLabel).expandX().colspan(3);
+            table.row();
+            table.defaults().pad(1, 1, 1, 1).center().fill();
+            table.add(new Label("Player Name", uiSkin), new Label("Kills", uiSkin), new Label("Score", uiSkin));
+            table.row();
+            table.add(nameListWidget, killsListWidget, scoreListWidget);
 
-            Container<Table> wrapper = new Container<>(root);
-            wrapper.setFillParent(true);
-            int WIDTH = 800;
-            int HEIGHT = 400;
-            wrapper.width(WIDTH).height(HEIGHT);
-
-            this.addActor(wrapper);
+            this.setFillParent(true);
+            this.width(800).height(400);
         }
 
-        public ScoreboardStage(Viewport viewport, Batch batch) {
-            super(viewport, batch);
+        public Scoreboard() {
+            super(new Table(uiSkin));
         }
 
         @Override
-        public void act() {
-            super.act();
+        public void act(float delta) {
+            super.act(delta);
 
-            timeLeftLabel.setText((int) (Round.ROUND_LENGTH - ClientRound.getInstance().timePassed));
+            timeLeftLabel.setText((int) (ClientRound.getRoundLength() - ClientRound.getInstance().getTimePassed()));
             playerNames.clear();
             playerKills.clear();
             playerScore.clear();
@@ -310,7 +309,7 @@ public class GameScreen implements Screen {
         }
     }
 
-    private static class GameHUDStage extends Stage {
+    public static class GameHUDStage extends Stage {
         private ProgressBar healthOrb;
         private ProgressBar shieldBar;
         private ProgressBar manaBar;

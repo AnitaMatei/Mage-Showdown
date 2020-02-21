@@ -1,4 +1,4 @@
-package com.mageshowdown.gamelogic;
+package com.mageshowdown.gameclient;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -16,7 +16,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mageshowdown.gameclient.MageShowdownClient;
+import com.mageshowdown.gamelogic.GameWorld;
 import com.mageshowdown.utils.PrefsKeys;
 
 import java.util.TreeSet;
@@ -339,8 +339,6 @@ public class OptionsStage extends Stage {
     private void createDialog() {
         discDialog = new MenuDialog("Changes not applied", "Your changes have not been applied. Discard changes?",
                 uiSkin, "dialog");
-        /*Button discardBtn = new TextButton(, uiSkin);
-        Button cancelBtn = new TextButton(, uiSkin);*/
         discDialog.button("Discard", (Runnable) () -> {
             applyButton.setVisible(isAnyChange = false);
             setSelectedFromPrefs();

@@ -258,12 +258,12 @@ public class ClientPlayerCharacter extends PlayerCharacter
                 Gdx.input.setInputProcessor(GameScreen.getEscMenuStage());
                 break;
             case Input.Keys.TAB:
-                if (GameScreen.getState() == GameScreen.State.GAME_RUNNING) {
+                if (!GameScreen.getHudStage().getActors().contains(GameScreen.getScoreboard(), false)) {
                     GameScreen.addActionToScoreboard(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
-                    GameScreen.setState(GameScreen.State.SCOREBOARD);
-                } else if (GameScreen.getState() == GameScreen.State.SCOREBOARD) {
+                    GameScreen.getHudStage().addActor(GameScreen.getScoreboard());
+                } else {
                     GameScreen.addActionToScoreboard(Actions.sequence(Actions.fadeOut(0.1f)
-                            , Actions.run(() -> GameScreen.setState(GameScreen.State.GAME_RUNNING))));
+                            , Actions.removeActor(GameScreen.getScoreboard())));
                 }
                 break;
         }

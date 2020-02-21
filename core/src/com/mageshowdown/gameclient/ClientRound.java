@@ -1,6 +1,5 @@
 package com.mageshowdown.gameclient;
 
-import com.mageshowdown.gamelogic.GameScreen;
 import com.mageshowdown.gamelogic.Laser;
 import com.mageshowdown.gamelogic.Round;
 

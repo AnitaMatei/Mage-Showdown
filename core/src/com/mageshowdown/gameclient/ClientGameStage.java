@@ -24,7 +24,8 @@ public class ClientGameStage extends Stage {
 
     public ClientGameStage() {
         super();
-        Viewport viewport = new StretchViewport(1280f, 720f, new OrthographicCamera(getViewport().getScreenWidth(), getViewport().getScreenHeight()));
+        Viewport viewport = new StretchViewport(1280f, 720f,
+                new OrthographicCamera(getViewport().getScreenWidth(), getViewport().getScreenHeight()));
         setViewport(viewport);
 
         b2dr = new Box2DDebugRenderer();
@@ -40,8 +41,8 @@ public class ClientGameStage extends Stage {
         GameWorld.stepBox2DWorld();
         /*
          * anything that affects the bodies inside a WORLD has to be done after a WORLD has stepped
-         * otherwise the game will crash because the WORLD is locked; here the positions and velocities of players' bodies are synchronized
-         * and the bodies that have to be removed are removed
+         * otherwise the game will crash because the WORLD is locked; here the positions and velocities of players'
+         * bodies are synchronized and the bodies that have to be removed are removed
          */
         GameWorld.clearBodyCreationQueue();
         GameWorld.clearBodyRemovalQueue();

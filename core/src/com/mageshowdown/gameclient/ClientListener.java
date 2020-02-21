@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
-import com.mageshowdown.gamelogic.GameScreen;
 import com.mageshowdown.gamelogic.GameWorld;
 import com.mageshowdown.gamelogic.Orb;
 import com.mageshowdown.packets.Network;
