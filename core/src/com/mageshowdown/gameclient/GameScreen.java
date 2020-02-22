@@ -216,7 +216,6 @@ public class GameScreen implements Screen {
                     ClientRound.getInstance().stop();
                     MageShowdownClient.getInstance().setScreen(MenuScreen.getInstance());
                     Gdx.input.setInputProcessor(MenuScreen.getMainMenuStage());
-
                 }
             });
 

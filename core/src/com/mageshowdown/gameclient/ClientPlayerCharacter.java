@@ -253,6 +253,10 @@ public class ClientPlayerCharacter extends PlayerCharacter
                 switchOrbs = true;
                 break;
             case Input.Keys.ESCAPE:
+                // We stop the player movement locally if we press escape, and send keyUp packets to server
+                moveLeft = moveRight = false;
+                keyUp(Input.Keys.A);
+                keyUp(Input.Keys.D);
                 GameScreen.getEscMenuStage().getRootTable().addAction(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
                 GameScreen.setState(GameScreen.State.GAME_PAUSED);
                 Gdx.input.setInputProcessor(GameScreen.getEscMenuStage());
@@ -261,9 +265,6 @@ public class ClientPlayerCharacter extends PlayerCharacter
                 if (!GameScreen.getHudStage().getActors().contains(GameScreen.getScoreboard(), false)) {
                     GameScreen.addActionToScoreboard(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
                     GameScreen.getHudStage().addActor(GameScreen.getScoreboard());
-                } else {
-                    GameScreen.addActionToScoreboard(Actions.sequence(Actions.fadeOut(0.1f)
-                            , Actions.removeActor(GameScreen.getScoreboard())));
                 }
                 break;
         }
@@ -275,12 +276,21 @@ public class ClientPlayerCharacter extends PlayerCharacter
     public boolean keyUp(int keycode) {
         Network.MoveKeyUp ku = new Network.MoveKeyUp();
         ku.keycode = keycode;
-        if (keycode == Input.Keys.A) {
-            moveLeft = false;
-            myClient.sendTCP(ku);
-        } else if (keycode == Input.Keys.D) {
-            moveRight = false;
-            myClient.sendTCP(ku);
+        switch (keycode) {
+            case Input.Keys.A:
+                moveLeft = false;
+                myClient.sendTCP(ku);
+                break;
+            case Input.Keys.D:
+                moveRight = false;
+                myClient.sendTCP(ku);
+
+                break;
+            case Input.Keys.TAB:
+                if (GameScreen.getHudStage().getActors().contains(GameScreen.getScoreboard(), false))
+                    GameScreen.addActionToScoreboard(Actions.sequence(Actions.fadeOut(0.1f)
+                            , Actions.removeActor(GameScreen.getScoreboard())));
+                break;
         }
         return true;
     }

@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.mageshowdown.utils.PrefsKeys;
@@ -63,7 +64,7 @@ public class MenuDialog extends Dialog {
 
     @Override
     public Dialog show(Stage stage) {
-        return show(stage, null);
+        return show(stage, Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
     }
 
     @Override

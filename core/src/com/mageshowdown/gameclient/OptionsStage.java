@@ -348,7 +348,7 @@ public class OptionsStage extends Stage {
 
     private void handleExit() {
         // If there is any change, ask the user to reset settings, or to cancel and apply
-        if (isAnyChange) discDialog.show(this, Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
+        if (isAnyChange) discDialog.show(this);
         else changeToPrevMenu();
     }
 
