@@ -45,7 +45,6 @@ public class GameScreen implements Screen {
         hudStage = new GameHUDStage(viewport, batch);
         escMenuStage = new EscMenuStage(viewport, batch);
         roundEndStage = new RoundEndStage(viewport, batch);
-        gameOptionsStage = new OptionsStage(viewport, batch, INSTANCE);
         scoreboard = new Scoreboard();
 
         state = State.GAME_RUNNING;
@@ -151,7 +150,6 @@ public class GameScreen implements Screen {
     public void dispose() {
         gameStage.dispose();
         escMenuStage.dispose();
-        gameOptionsStage.dispose();
         hudStage.dispose();
         roundEndStage.dispose();
         batch.dispose();
@@ -200,6 +198,7 @@ public class GameScreen implements Screen {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
                     btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
+                    gameOptionsStage = new OptionsStage(viewport, batch, INSTANCE);
                     gameOptionsStage.getRootTable().addAction(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
                     state = State.GAME_OPTIONS;
                     Gdx.input.setInputProcessor(gameOptionsStage);

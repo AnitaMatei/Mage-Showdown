@@ -1,4 +1,4 @@
-package com.mageshowdown.gameclient;
+package com.mageshowdown.desktop;
 
 import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.Preferences;
@@ -19,34 +19,52 @@ import java.util.Map;
 import java.util.Properties;
 
 public class GamePreferences implements Preferences {
-
     private final Properties properties = new Properties();
     private final FileHandle fileHandle;
 
     /**
      * Default location for UserPrefs
      **/
-    public GamePreferences() throws IOException {
-        String prefsPath;
+    public GamePreferences(String filename) throws IOException {
+        String fullPath;
         if (OSDetector.getOSType() == OSDetector.OSType.WINDOWS)
-            prefsPath = FileSystemView.getFileSystemView().getDefaultDirectory().getPath() + "\\My Games\\MageShowdown\\config.xml";
+            fullPath = FileSystemView.getFileSystemView().getDefaultDirectory().getPath() + "\\My Games\\MageShowdown\\" + filename;
         else
-            prefsPath = FileSystemView.getFileSystemView().getHomeDirectory().getPath() + "/.MageShowdown/config.xml";
-        this.fileHandle = new FileHandle(prefsPath);
-        File file = new File(prefsPath);
+            fullPath = FileSystemView.getFileSystemView().getHomeDirectory().getPath() + "/.MageShowdown/" + filename;
+        this.fileHandle = new FileHandle(fullPath);
+        File file = new File(fullPath);
         if (file.exists())
             properties.loadFromXML(fileHandle.read());
         else {
             file.getParentFile().mkdirs();
             file.createNewFile();
-            defaultValues();
+            defaultValues(filename);
         }
     }
 
-    /**
-     * Specific location for UserPrefs
-     **/
-    public GamePreferences(String path_to_file) throws IOException {
+    private void defaultValues(String filename) {
+        if (filename.equals("config.xml")) {
+            this.putString(PrefsKeys.PLAYERNAME, "UnknownMage");
+            Graphics.DisplayMode dm = LwjglApplicationConfiguration.getDesktopDisplayMode();
+            this.putInteger(PrefsKeys.WIDTH, dm.width);
+            this.putInteger(PrefsKeys.HEIGHT, dm.height);
+            this.putInteger(PrefsKeys.REFRESHRATE, dm.refreshRate);
+            this.putInteger(PrefsKeys.FOREGROUNDFPS, 0);
+            this.putInteger(PrefsKeys.BACKGROUNDFPS, 60);
+            this.putBoolean(PrefsKeys.SHOWFPS, false);
+            this.putBoolean(PrefsKeys.VSYNC, true);
+            this.putBoolean(PrefsKeys.USEGL30, false);
+            this.putBoolean(PrefsKeys.FULLSCREEN, true);
+            this.putString(PrefsKeys.LASTENTEREDIP, "127.0.0.1");
+            this.putFloat(PrefsKeys.SOUNDVOLUME, 0.5f);
+            this.putFloat(PrefsKeys.MUSICVOLUME, 0.5f);
+            //TODO: put defaults to load into preference xml
+
+            this.flush();
+        }
+    }
+
+    /*public GamePreferences(String path_to_file) throws IOException {
         File file = new File(path_to_file);
         this.fileHandle = new FileHandle(path_to_file);
         if (file.exists())
@@ -56,8 +74,7 @@ public class GamePreferences implements Preferences {
             file.createNewFile();
             defaultValues();
         }
-    }
-
+    }*/
 
     @Override
     public Preferences putBoolean(String key, boolean val) {
@@ -195,25 +212,5 @@ public class GamePreferences implements Preferences {
     @Override
     public void remove(String key) {
         properties.remove(key);
-    }
-
-    private void defaultValues() {
-        this.putString(PrefsKeys.PLAYERNAME, "UnknownMage");
-        Graphics.DisplayMode dm = LwjglApplicationConfiguration.getDesktopDisplayMode();
-        this.putInteger(PrefsKeys.WIDTH, dm.width);
-        this.putInteger(PrefsKeys.HEIGHT, dm.height);
-        this.putInteger(PrefsKeys.REFRESHRATE, dm.refreshRate);
-        this.putInteger(PrefsKeys.FOREGROUNDFPS, 0);
-        this.putInteger(PrefsKeys.BACKGROUNDFPS, 60);
-        this.putBoolean(PrefsKeys.SHOWFPS, false);
-        this.putBoolean(PrefsKeys.VSYNC, true);
-        this.putBoolean(PrefsKeys.USEGL30, false);
-        this.putBoolean(PrefsKeys.FULLSCREEN, true);
-        this.putString(PrefsKeys.LASTENTEREDIP, "127.0.0.1");
-        this.putFloat(PrefsKeys.SOUNDVOLUME, 0.5f);
-        this.putFloat(PrefsKeys.MUSICVOLUME, 0.5f);
-        //TODO: put defaults to load into preference xml
-
-        this.flush();
     }
 }

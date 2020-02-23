@@ -26,9 +26,38 @@ import static com.mageshowdown.gameclient.ClientAssetLoader.*;
 
 public class OptionsStage extends Stage {
 
+    private static final Graphics.DisplayMode[] displayModes;
+    private static final String[] resArray;
+    private static final Integer[] refreshArray;
+    private static final Label[] labels;
+
+    static {
+        displayModes = Gdx.graphics.getDisplayModes();
+        TreeSet<String> resSet = new TreeSet<>();
+        TreeSet<Integer> refreshSet = new TreeSet<>();
+        Stream.of(displayModes)/*.filter(displayMode -> {
+            float aspectNum = ((float) displayMode.width / (float) displayMode.height) * 9f;
+            return displayMode.width >= 1280 && displayMode.height >= 720 && aspectNum >= 15.9f && aspectNum <= 16.1f;
+        })*/.forEach(displayMode -> {
+            resSet.add(displayMode.width + "x" + displayMode.height);
+            refreshSet.add(displayMode.refreshRate);
+        });
+        resArray = resSet.toArray(new String[0]);
+        refreshArray = refreshSet.toArray(new Integer[0]);
+
+        labels = new Label[7];
+        labels[0] = new Label("Options Menu", uiSkin, "menu-label");
+        labels[1] = new Label("Resolution", uiSkin, "menu-label");
+        labels[2] = new Label("Refresh Rate", uiSkin, "menu-label");
+        labels[3] = new Label("Display Mode", uiSkin, "menu-label");
+        labels[4] = new Label("Player name", uiSkin, "menu-label");
+        labels[5] = new Label("Sound", uiSkin, "menu-label");
+        labels[6] = new Label("Music", uiSkin, "menu-label");
+        Stream.of(labels).forEach(label -> label.setAlignment(Align.center));
+    }
+
     private final MageShowdownClient game = MageShowdownClient.getInstance();
     private final Screen parentScreen;
-    private final Graphics.DisplayMode[] displayModes;
     private final int samples = 22100;
     private final short[] micData = new short[samples * 5];
     private Table root;
@@ -41,7 +70,6 @@ public class OptionsStage extends Stage {
     private SelectBox<Integer> refreshSelectBox;
     private Slider soundVolumeSlider;
     private Slider musicVolumeSlider;
-    private Label[] labels;
     private boolean isAnyChange = false;
     private AudioRecorder audioRecorder;
     private AudioDevice audioDevice;
@@ -53,8 +81,6 @@ public class OptionsStage extends Stage {
         Image background = new Image(menuBackground);
         background.setFillParent(true);
         if (parentScreen instanceof GameScreen) background.setColor(0, 0, 0, 0.8f);
-
-        displayModes = Gdx.graphics.getDisplayModes();
 
         setupLayoutView();
         createDialog();
@@ -76,15 +102,6 @@ public class OptionsStage extends Stage {
         ScrollPane contScroll = new ScrollPane(contextTable, uiSkin, "transparent");
         contScroll.setFadeScrollBars(false);
 
-        labels = new Label[7];
-        labels[0] = new Label("Options Menu", uiSkin, "menu-label");
-        labels[1] = new Label("Resolution", uiSkin, "menu-label");
-        labels[2] = new Label("Refresh Rate", uiSkin, "menu-label");
-        labels[3] = new Label("Display Mode", uiSkin, "menu-label");
-        labels[4] = new Label("Player name", uiSkin, "menu-label");
-        labels[5] = new Label("Sound", uiSkin, "menu-label");
-        labels[6] = new Label("Music", uiSkin, "menu-label");
-
         resSelectBox = new SelectBox<>(uiSkin);
         modeSelectBox = new SelectBox<>(uiSkin);
         refreshSelectBox = new SelectBox<>(uiSkin);
@@ -97,7 +114,6 @@ public class OptionsStage extends Stage {
         testMic = new TextButton("Record microphone", uiSkin);
         playMic = new TextButton("Play Recording", uiSkin);
 
-        Stream.of(labels).forEach(label -> label.setAlignment(Align.center));
         Stream.of(resSelectBox, modeSelectBox, refreshSelectBox).forEach(selectBox -> {
             selectBox.setAlignment(Align.center);
             selectBox.getList().setAlignment(Align.center);
@@ -140,19 +156,9 @@ public class OptionsStage extends Stage {
     }
 
     private void setupWidgetData() {
-        TreeSet<String> resSet = new TreeSet<>();
-        TreeSet<Integer> refreshSet = new TreeSet<>();
-        Stream.of(displayModes)/*.filter(displayMode -> {
-            float aspectNum = ((float) displayMode.width / (float) displayMode.height) * 9f;
-            return displayMode.width >= 1280 && displayMode.height >= 720 && aspectNum >= 15.9f && aspectNum <= 16.1f;
-        })*/.forEach(displayMode -> {
-            resSet.add(displayMode.width + "x" + displayMode.height);
-            refreshSet.add(displayMode.refreshRate);
-        });
-
-        resSelectBox.setItems(resSet.toArray(new String[0]));
+        resSelectBox.setItems(resArray);
         modeSelectBox.setItems("Fullscreen", "Windowed");
-        refreshSelectBox.setItems(refreshSet.toArray(new Integer[0]));
+        refreshSelectBox.setItems(refreshArray);
 
         soundVolumeSlider.setValue(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
         labels[5].setText("Sound: " + (int) (soundVolumeSlider.getPercent() * 100) + "%");
@@ -188,21 +194,21 @@ public class OptionsStage extends Stage {
         resSelectBox.getList().addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                hasAnySettingChanged();
+                checkForChanges();
             }
         });
 
         refreshSelectBox.getList().addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                hasAnySettingChanged();
+                checkForChanges();
             }
         });
 
         modeSelectBox.getList().addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                hasAnySettingChanged();
+                checkForChanges();
             }
         });
 
@@ -210,7 +216,7 @@ public class OptionsStage extends Stage {
         playerNameField.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                hasAnySettingChanged();
+                checkForChanges();
             }
         });
 
@@ -218,7 +224,7 @@ public class OptionsStage extends Stage {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                hasAnySettingChanged();
+                checkForChanges();
                 if (vsyncCheckBox.isChecked()) vsyncCheckBox.setText("VSync: ON");
                 else vsyncCheckBox.setText("VSync: OFF");
             }
@@ -228,7 +234,7 @@ public class OptionsStage extends Stage {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                hasAnySettingChanged();
+                checkForChanges();
                 if (showFPSCheckBox.isChecked()) showFPSCheckBox.setText("Show FPS: ON");
                 else showFPSCheckBox.setText("Show FPS: OFF");
             }
@@ -333,7 +339,7 @@ public class OptionsStage extends Stage {
         });
     }
 
-    private void hasAnySettingChanged() {
+    private void checkForChanges() {
         if (!resSelectBox.getSelected().equals(prefs.getString(PrefsKeys.WIDTH) + 'x' + prefs.getString(PrefsKeys.HEIGHT))
                 || !refreshSelectBox.getSelected().equals(prefs.getInteger(PrefsKeys.REFRESHRATE))
                 || (modeSelectBox.getSelected().equals("Fullscreen") && !prefs.getBoolean(PrefsKeys.FULLSCREEN)
@@ -350,7 +356,6 @@ public class OptionsStage extends Stage {
                 uiSkin, "dialog");
         discDialog.button("Discard", (Runnable) () -> {
             applyButton.setVisible(isAnyChange = false);
-            setSelectedFromPrefs();
             changeToPrevMenu();
         }).closeButton("Cancel");
     }
@@ -374,6 +379,7 @@ public class OptionsStage extends Stage {
             GameScreen.getEscMenuStage().getRootTable().addAction(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
             Gdx.input.setInputProcessor(GameScreen.getEscMenuStage());
         }
+        this.dispose();
     }
 
     @Override

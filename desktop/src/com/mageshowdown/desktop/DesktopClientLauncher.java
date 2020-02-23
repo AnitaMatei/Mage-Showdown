@@ -1,6 +1,5 @@
 package com.mageshowdown.desktop;
 
-import com.mageshowdown.gameclient.GamePreferences;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -24,7 +23,7 @@ public class DesktopClientLauncher extends Application {
     //Launcher entry point
     @Override
     public void start(Stage primaryStage) throws IOException {
-        prefs = new GamePreferences();
+        prefs = new GamePreferences("config.xml");
         mainStage = primaryStage;
         mainStage.setTitle("Mage Showdown Launcher");
         mainStage.setResizable(false);

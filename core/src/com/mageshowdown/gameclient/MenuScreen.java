@@ -72,7 +72,6 @@ public class MenuScreen implements Screen {
 
         mainMenuStage = new Stage(viewport, batch);
         prepareMainMenuStage();
-        menuOptionsStage = new OptionsStage(viewport, batch, INSTANCE);
 
         Gdx.input.setInputProcessor(currentStage = mainMenuStage);
 
@@ -107,15 +106,14 @@ public class MenuScreen implements Screen {
 
     @Override
     public void hide() {
-        menuMusic.stop();
         //hide method is called when we change to a new screen or before the Application exits
+        menuMusic.stop();
         this.dispose();
     }
 
     @Override
     public void dispose() {
         mainMenuStage.dispose();
-        menuOptionsStage.dispose();
         batch.dispose();
     }
 
@@ -160,6 +158,7 @@ public class MenuScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
                 // Set alpha to 0 and then add fade in effect action
+                menuOptionsStage = new OptionsStage(viewport, batch, INSTANCE);
                 menuOptionsStage.getRootTable().addAction(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
                 Gdx.input.setInputProcessor(currentStage = menuOptionsStage);
             }
