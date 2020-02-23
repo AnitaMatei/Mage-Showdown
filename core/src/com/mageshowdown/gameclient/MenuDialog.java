@@ -26,44 +26,50 @@ public class MenuDialog extends Dialog {
         getContentTable().row();
         getContentTable().add(msgLabel);
 
-        getButtonTable().defaults().space(0, 20, 0, 20).width(150).height(60);
+        getButtonTable().defaults().space(0, 20, 0, 20).width(175).height(60);
     }
 
     @Override
-    public Dialog button(String text) {
+    public MenuDialog button(String text) {
         return button(text, null);
     }
 
     @Override
-    public Dialog button(String text, Object object) {
+    public MenuDialog button(String text, Object object) {
         if (getSkin() == null)
             throw new IllegalStateException("This method may only be used if the dialog was constructed with a Skin.");
         return button(text, object, getSkin().get(TextButton.TextButtonStyle.class));
     }
 
     @Override
-    public Dialog button(String text, Object object, TextButton.TextButtonStyle buttonStyle) {
+    public MenuDialog button(String text, Object object, TextButton.TextButtonStyle buttonStyle) {
         return button(new TextButton(text, buttonStyle), object);
     }
 
+    public MenuDialog closeButton(String text) {
+        return button(new ImageTextButton(text, uiSkin, "escbutton"));
+    }
+
     @Override
-    public Dialog button(Button button) {
+    public MenuDialog button(Button button) {
         return button(button, null);
     }
 
     @Override
-    public Dialog button(Button button, Object object) {
+    public MenuDialog button(Button button, Object object) {
         button.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
             }
         });
-        return super.button(button, object);
+        this.getButtonTable().add(button);
+        setObject(button, object);
+        return this;
     }
 
     @Override
-    public Dialog show(Stage stage) {
+    public MenuDialog show(Stage stage) {
         return show(stage, Actions.sequence(Actions.alpha(0f), Actions.fadeIn(0.1f)));
     }
 
@@ -73,7 +79,7 @@ public class MenuDialog extends Dialog {
     }
 
     @Override
-    public Dialog show(Stage stage, Action action) {
+    public MenuDialog show(Stage stage, Action action) {
         super.show(stage, action);
         setPosition(Math.round((stage.getWidth() - getWidth()) / 2), Math.round((stage.getHeight() - getHeight()) / 2));
         return this;

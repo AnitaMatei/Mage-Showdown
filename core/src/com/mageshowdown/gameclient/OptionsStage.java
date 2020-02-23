@@ -35,7 +35,8 @@ public class OptionsStage extends Stage {
     private MenuDialog discDialog;
     private TextField playerNameField;
     private TextButton vsyncCheckBox, showFPSCheckBox,
-            backButton, applyButton, testMic, playMic;
+            applyButton, testMic, playMic;
+    private ImageTextButton backButton;
     private SelectBox<String> resSelectBox, modeSelectBox;
     private SelectBox<Integer> refreshSelectBox;
     private Slider soundVolumeSlider;
@@ -102,7 +103,7 @@ public class OptionsStage extends Stage {
             selectBox.getList().setAlignment(Align.center);
         });
 
-        backButton = new TextButton("Back", uiSkin);
+        backButton = new ImageTextButton("Back", uiSkin, "escbutton");
         applyButton = new TextButton("Apply", uiSkin);
         applyButton.setVisible(false);
 
@@ -162,7 +163,7 @@ public class OptionsStage extends Stage {
     }
 
     private void setSelectedFromPrefs() {
-        resSelectBox.setSelected(prefs.getInteger(PrefsKeys.WIDTH) + "x" + prefs.getInteger(PrefsKeys.HEIGHT));
+        resSelectBox.setSelected(prefs.getString(PrefsKeys.WIDTH) + "x" + prefs.getString(PrefsKeys.HEIGHT));
         if (prefs.getBoolean(PrefsKeys.FULLSCREEN))
             modeSelectBox.setSelected("Fullscreen");
         else
@@ -187,21 +188,21 @@ public class OptionsStage extends Stage {
         resSelectBox.getList().addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                applyButton.setVisible(isAnyChange = true);
+                hasAnySettingChanged();
             }
         });
 
         refreshSelectBox.getList().addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                applyButton.setVisible(isAnyChange = true);
+                hasAnySettingChanged();
             }
         });
 
         modeSelectBox.getList().addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                applyButton.setVisible(isAnyChange = true);
+                hasAnySettingChanged();
             }
         });
 
@@ -209,7 +210,7 @@ public class OptionsStage extends Stage {
         playerNameField.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                applyButton.setVisible(isAnyChange = true);
+                hasAnySettingChanged();
             }
         });
 
@@ -217,11 +218,9 @@ public class OptionsStage extends Stage {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                applyButton.setVisible(isAnyChange = true);
-                if (vsyncCheckBox.isChecked())
-                    vsyncCheckBox.setText("VSync: ON");
-                else
-                    vsyncCheckBox.setText("VSync: OFF");
+                hasAnySettingChanged();
+                if (vsyncCheckBox.isChecked()) vsyncCheckBox.setText("VSync: ON");
+                else vsyncCheckBox.setText("VSync: OFF");
             }
         });
 
@@ -229,11 +228,9 @@ public class OptionsStage extends Stage {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 btnClickSound.play(prefs.getFloat(PrefsKeys.SOUNDVOLUME));
-                applyButton.setVisible(isAnyChange = true);
-                if (showFPSCheckBox.isChecked())
-                    showFPSCheckBox.setText("Show FPS: ON");
-                else
-                    showFPSCheckBox.setText("Show FPS: OFF");
+                hasAnySettingChanged();
+                if (showFPSCheckBox.isChecked()) showFPSCheckBox.setText("Show FPS: ON");
+                else showFPSCheckBox.setText("Show FPS: OFF");
             }
         });
 
@@ -308,8 +305,8 @@ public class OptionsStage extends Stage {
                 game.setCanDrawFont(showFPSCheckBox.isChecked());
 
                 //Save settings to the Preferences Map
-                prefs.putInteger(PrefsKeys.WIDTH, Integer.parseInt(str[0]));
-                prefs.putInteger(PrefsKeys.HEIGHT, Integer.parseInt(str[1]));
+                prefs.putString(PrefsKeys.WIDTH, str[0]);
+                prefs.putString(PrefsKeys.HEIGHT, str[1]);
                 prefs.putInteger(PrefsKeys.REFRESHRATE, refreshSelectBox.getSelected());
                 if (modeSelectBox.getSelected().equals("Fullscreen"))
                     prefs.putBoolean(PrefsKeys.FULLSCREEN, true);
@@ -336,6 +333,18 @@ public class OptionsStage extends Stage {
         });
     }
 
+    private void hasAnySettingChanged() {
+        if (!resSelectBox.getSelected().equals(prefs.getString(PrefsKeys.WIDTH) + 'x' + prefs.getString(PrefsKeys.HEIGHT))
+                || !refreshSelectBox.getSelected().equals(prefs.getInteger(PrefsKeys.REFRESHRATE))
+                || (modeSelectBox.getSelected().equals("Fullscreen") && !prefs.getBoolean(PrefsKeys.FULLSCREEN)
+                || modeSelectBox.getSelected().equals("Windowed") && prefs.getBoolean(PrefsKeys.FULLSCREEN))
+                || !playerNameField.getText().equals(prefs.getString(PrefsKeys.PLAYERNAME))
+                || vsyncCheckBox.isChecked() != prefs.getBoolean(PrefsKeys.VSYNC)
+                || showFPSCheckBox.isChecked() != prefs.getBoolean(PrefsKeys.SHOWFPS))
+            applyButton.setVisible(isAnyChange = true);
+        else applyButton.setVisible(isAnyChange = false);
+    }
+
     private void createDialog() {
         discDialog = new MenuDialog("Changes not applied", "Your changes have not been applied. Discard changes?",
                 uiSkin, "dialog");
@@ -343,7 +352,7 @@ public class OptionsStage extends Stage {
             applyButton.setVisible(isAnyChange = false);
             setSelectedFromPrefs();
             changeToPrevMenu();
-        }).button("Cancel");
+        }).closeButton("Cancel");
     }
 
     private void handleExit() {

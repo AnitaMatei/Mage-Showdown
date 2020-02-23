@@ -15,12 +15,14 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 public class ClientAssetLoader {
 
     public static Skin uiSkin;
     public static Skin hudSkin;
     public static Texture menuBackground;
+    public static Texture escapeKeyTex;
     //fonts
     public static BitmapFont hugeSizeFont;
     public static BitmapFont bigSizeFont;
@@ -135,6 +137,7 @@ public class ClientAssetLoader {
         manager.load("Music/Night Pulse.mp3", Music.class);
 
         manager.load("UIAssets/menuBackground.png", Texture.class);
+        manager.load("UIAssets/Keys/Esc-Key-up.png", Texture.class);
         manager.load("UIAssets/libgdx_logo.png", Texture.class);
         manager.load("UIAssets/kryonet_logo.png", Texture.class);
 
@@ -205,17 +208,22 @@ public class ClientAssetLoader {
         gameplayMusic = manager.get("Music/Night Pulse.mp3", Music.class);
 
         menuBackground = manager.get("UIAssets/menuBackground.png", Texture.class);
+        escapeKeyTex = manager.get("UIAssets/Keys/Esc-Key-up.png", Texture.class);
         libgdxLogo = manager.get("UIAssets/libgdx_logo.png", Texture.class);
         kryonetLogo = manager.get("UIAssets/kryonet_logo.png", Texture.class);
 
         hugeSizeFont = manager.get("retroHuge.ttf", BitmapFont.class);
 
         uiSkin = manager.get("UIAssets/uiskin.json", Skin.class);
-        uiSkin.get("default", TextButton.TextButtonStyle.class).font = bigSizeFont;
-        uiSkin.get("default", TextField.TextFieldStyle.class).font = bigSizeFont;
-        uiSkin.get("default", SelectBox.SelectBoxStyle.class).font =
-                uiSkin.get("default", SelectBox.SelectBoxStyle.class).listStyle.font = bigSizeFont;
+        uiSkin.get("default", TextButton.TextButtonStyle.class).font =
+                uiSkin.get("default", TextField.TextFieldStyle.class).font =
+                        uiSkin.get("default", SelectBox.SelectBoxStyle.class).font =
+                                uiSkin.get("default", SelectBox.SelectBoxStyle.class).listStyle.font = bigSizeFont;
         uiSkin.add("menu-label", new Label.LabelStyle(bigSizeFont, Color.WHITE), Label.LabelStyle.class);
+        ImageTextButton.ImageTextButtonStyle itbs = new ImageTextButton.ImageTextButtonStyle(
+                uiSkin.get("default", TextButton.TextButtonStyle.class));
+        itbs.imageUp = new TextureRegionDrawable(escapeKeyTex);
+        uiSkin.add("escbutton", itbs);
 
         map1 = manager.get("Maps/level1.tmx", TiledMap.class);
         dungeonMap = manager.get("Maps/level2.tmx", TiledMap.class);

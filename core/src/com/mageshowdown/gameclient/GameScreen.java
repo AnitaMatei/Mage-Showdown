@@ -17,9 +17,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.esotericsoftware.kryonet.Client;
 import com.mageshowdown.gamelogic.PlayerCharacter;
-import com.mageshowdown.gamelogic.Round;
 import com.mageshowdown.utils.PrefsKeys;
 
 import static com.mageshowdown.gameclient.ClientAssetLoader.*;
@@ -176,7 +174,7 @@ public class GameScreen implements Screen {
             //root.debug();
             this.addActor(rootTable);
 
-            TextButton resumeButton = new TextButton("Resume Game", uiSkin);
+            ImageTextButton resumeButton = new ImageTextButton("Resume Game", uiSkin, "escbutton");
             TextButton optionsButton = new TextButton("Options...", uiSkin);
             TextButton quitButton = new TextButton("Quit Game", uiSkin);
             TextButton disconnectButton = new TextButton("Disconnect", uiSkin);
@@ -226,7 +224,7 @@ public class GameScreen implements Screen {
 
                     dialog = new MenuDialog("Exit to desktop", "Exiting to desktop. Are you sure?",
                             uiSkin, "dialog");
-                    dialog.button("Yes", (Runnable) () -> Gdx.app.exit()).button("Cancel");
+                    dialog.button("Yes", (Runnable) () -> Gdx.app.exit()).closeButton("Cancel");
                     dialog.show(escMenuStage);
                 }
             });

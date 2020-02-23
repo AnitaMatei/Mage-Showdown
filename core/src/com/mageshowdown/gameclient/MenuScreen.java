@@ -199,7 +199,7 @@ public class MenuScreen implements Screen {
             gameplayMusic.stop();
 
             MenuDialog dialog = new MenuDialog("Connection Error", e.toString(), uiSkin, "dialog");
-            dialog.button("Back");
+            dialog.closeButton("Back");
             dialog.key(Input.Keys.ESCAPE, null);
             dialog.show(mainMenuStage);
         }
