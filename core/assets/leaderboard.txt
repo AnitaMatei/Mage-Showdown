@@ -1,0 +1,4 @@
+mah_mouse 0 0
+FreedomFight 0 0
+Freedom1 0 0
+Freedom2 1 1

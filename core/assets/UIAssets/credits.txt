@@ -1,0 +1,44 @@
+﻿
+# Credits
+
+
+
+
+## Developers
+Halalai Mircea - Costin
+Anita Matei Gabriel
+
+
+
+## Gameplay Designer/Programmer
+Anita Matei Gabriel
+
+
+
+## Networking Engineer
+Anita Matei Gabriel
+
+
+
+## UI/UX Designer/Programmer
+Halalai Mircea - Costin
+
+
+
+## Map Designers
+Halalai Mircea - Costin
+Anita Matei Gabriel
+
+
+
+## Special thanks to asset creators
+bakudas.itch.io
+codemanu.itch.io
+gerald-burke.itch.io
+mrbubblewand.wordpress.com
+
+
+
+## Powered by
+Libgdx (Badlogicgames)
+Kryonet (EsotericSoftware)
